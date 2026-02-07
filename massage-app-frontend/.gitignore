@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-**/node_modules
+/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -14,7 +14,7 @@
 /coverage
 
 # next.js
-**/.next/
+/.next/
 /out/
 
 # production
@@ -31,16 +31,7 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-**/.env*
-
-# Laravel
-/massage-app-backend/vendor/
-/massage-app-backend/storage/*.key
-/massage-app-backend/storage/logs/
-/massage-app-backend/storage/framework/cache/
-/massage-app-backend/storage/framework/sessions/
-/massage-app-backend/storage/framework/views/
-/massage-app-backend/bootstrap/cache/
+.env*
 
 # vercel
 .vercel

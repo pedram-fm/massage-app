@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16
@@ -14,19 +12,55 @@ services:
     volumes:
       - db_data:/var/lib/postgresql
 
-  app:
+  backend:
+    image: php:8.4-cli
+    container_name: laravel_api
+    working_dir: /var/www
+    command: >
+      sh -c "apt-get update &&
+      apt-get install -y libpq-dev postgresql-client git unzip &&
+      docker-php-ext-install pdo_pgsql &&
+      php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\" &&
+      php composer-setup.php --install-dir=/usr/local/bin --filename=composer &&
+      rm composer-setup.php &&
+      php -r \"file_exists('.env') || copy('.env.example', '.env');\" &&
+      until pg_isready -h db -p 5432; do sleep 1; done &&
+      composer install &&
+      php artisan key:generate --ansi &&
+      php artisan migrate --force &&
+      if [ ! -f storage/oauth-private.key ]; then php artisan passport:keys --force; fi &&
+      if ! PGPASSWORD=pedram_fm psql -h db -U pedram -d massage_app -tAc \"select 1 from oauth_clients where personal_access_client = true and provider = 'users' limit 1\" | grep -q 1; then php artisan passport:client --personal --provider=users --name=\"Personal Access Client\" --no-interaction; fi &&
+      php artisan serve --host=0.0.0.0 --port=8000"
+    volumes:
+      - ./massage-app-backend:/var/www
+    ports:
+      - "8000:8000"
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: massage_app
+      DB_USERNAME: pedram
+      DB_PASSWORD: pedram_fm
+      APP_URL: http://localhost:8000
+    depends_on:
+      - db
+
+  frontend:
     image: node:20
     container_name: next_app
     working_dir: /app
-    command: sh -c "npm install --legacy-peer-deps && npm run dev"
+    command: sh -c "npm install --legacy-peer-deps && npm run dev -- --hostname 0.0.0.0"
     volumes:
-      - ./:/app
+      - ./massage-app-frontend:/app
+      - /app/node_modules
+      - /app/.next
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: "postgresql://pedram:pedram_fm@db:5432/massage_app"
+      NEXT_PUBLIC_API_BASE_URL: "http://localhost:8000"
     depends_on:
-      - db
+      - backend
 
 volumes:
   db_data:
