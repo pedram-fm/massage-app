@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: pedram
+      POSTGRES_PASSWORD: pedram_fm
+      POSTGRES_DB: massage_app
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql
+
+  app:
+    image: node:20
+    container_name: next_app
+    working_dir: /app
+    command: sh -c "npm install --legacy-peer-deps && npm run dev"
+    volumes:
+      - ./:/app
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://pedram:pedram_fm@db:5432/massage_app"
+    depends_on:
+      - db
+
+volumes:
+  db_data:
