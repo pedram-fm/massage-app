@@ -31,6 +31,8 @@ if [ ! -f storage/oauth-private.key ]; then
   php artisan passport:keys --force
 fi
 
+php artisan passport:client --personal --name="Personal Access Client" --no-interaction || true
+
 if [ -f storage/oauth-private.key ]; then
   chmod 600 storage/oauth-private.key || true
 fi
