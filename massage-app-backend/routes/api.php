@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LogController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -12,3 +13,5 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth:api')->get('me', [AuthController::class, 'me']);
     Route::middleware('auth:api')->post('logout', [AuthController::class, 'logout']);
 });
+
+Route::get('logs/tail', [LogController::class, 'tail']);
