@@ -225,20 +225,20 @@ export function Register({ onBack, isDark }: RegisterProps) {
   };
 
   const handleResend = async () => {
-    if (verifyMode !== "phone") {
-      return { ok: false, message: "امکان ارسال مجدد وجود ندارد" };
-    }
-
-    const payload = {
-      phone: registerPayload.phone,
-      f_name: registerPayload.f_name,
-      l_name: registerPayload.l_name,
-      username: registerPayload.username,
-      email: registerPayload.email,
-    };
+    const isEmail = verifyMode === "email";
+    const endpoint = isEmail ? "/api/auth/register/resend" : "/api/auth/otp/request";
+    const payload = isEmail
+      ? { email: registerPayload.email }
+      : {
+          phone: registerPayload.phone,
+          f_name: registerPayload.f_name,
+          l_name: registerPayload.l_name,
+          username: registerPayload.username,
+          email: registerPayload.email,
+        };
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/otp/request`, {
+      const response = await fetch(`${apiBaseUrl}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(payload),
@@ -248,6 +248,10 @@ export function Register({ onBack, isDark }: RegisterProps) {
 
       if (!response.ok) {
         return { ok: false, message: data?.message || "ارسال مجدد ناموفق بود" };
+      }
+
+      if (data?.code_debug) {
+        toast.info(`کد تستی: ${data.code_debug}`);
       }
 
       return { ok: true };
@@ -566,7 +570,7 @@ export function Register({ onBack, isDark }: RegisterProps) {
           mode={verifyMode}
           onClose={() => setShowOTPModal(false)}
           onVerify={handleOTPVerified}
-          onResend={verifyMode === "phone" ? handleResend : undefined}
+          onResend={handleResend}
           isDark={isDark}
         />
       )}

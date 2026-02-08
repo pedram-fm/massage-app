@@ -4,8 +4,12 @@ namespace App\Providers;
 
 use App\Contracts\OtpSender;
 use App\Contracts\EmailCodeSender;
+use App\Contracts\PasswordResetCodeSender;
 use App\Services\Auth\LogOtpSender;
 use App\Services\Auth\LogEmailCodeSender;
+use App\Services\Auth\SmtpEmailCodeSender;
+use App\Services\Auth\LogPasswordResetCodeSender;
+use App\Services\Auth\SmtpPasswordResetCodeSender;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\Operation;
@@ -22,7 +26,25 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(OtpSender::class, LogOtpSender::class);
-        $this->app->bind(EmailCodeSender::class, LogEmailCodeSender::class);
+        $this->app->bind(EmailCodeSender::class, function () {
+            $mailer = config('mail.default', 'log');
+
+            if ($mailer === 'log' || $mailer === 'array') {
+                return new LogEmailCodeSender();
+            }
+
+            return new SmtpEmailCodeSender();
+        });
+
+        $this->app->bind(PasswordResetCodeSender::class, function () {
+            $mailer = config('mail.default', 'log');
+
+            if ($mailer === 'log' || $mailer === 'array') {
+                return new LogPasswordResetCodeSender();
+            }
+
+            return new SmtpPasswordResetCodeSender();
+        });
     }
 
     /**

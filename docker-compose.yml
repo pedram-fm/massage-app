@@ -41,6 +41,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
 
   backend-init:
     build:
@@ -81,6 +83,14 @@ services:
       API_BASE_URL: http://backend:8000
     depends_on:
       - backend
+
+  mailpit:
+    image: docker.arvancloud.ir/axllent/mailpit:latest
+    container_name: mailpit
+    restart: always
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
 volumes:
   db_data:
