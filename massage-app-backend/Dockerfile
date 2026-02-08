@@ -19,5 +19,6 @@ RUN if [ -f /etc/apt/sources.list ]; then \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=docker.arvancloud.ir/composer:2 /usr/bin/composer /usr/local/bin/composer
+COPY ./docker/php-dev.ini /usr/local/etc/php/conf.d/zz-dev.ini
 
 WORKDIR /var/www
