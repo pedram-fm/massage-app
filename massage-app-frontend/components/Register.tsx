@@ -5,6 +5,7 @@ import { ArrowRight, Eye, EyeOff, User, Mail, Lock } from "lucide-react";
 import { motion } from "motion/react";
 import { OTPModal } from "./OTPModal";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface RegisterProps {
   onBack: () => void;
@@ -13,7 +14,7 @@ interface RegisterProps {
 
 export function Register({ onBack, isDark }: RegisterProps) {
   const [formData, setFormData] = useState({
-    email: "",
+    identifier: "",
     firstName: "",
     lastName: "",
     username: "",
@@ -22,7 +23,7 @@ export function Register({ onBack, isDark }: RegisterProps) {
   });
 
   const [errors, setErrors] = useState({
-    email: "",
+    identifier: "",
     firstName: "",
     lastName: "",
     username: "",
@@ -30,14 +31,24 @@ export function Register({ onBack, isDark }: RegisterProps) {
     confirmPassword: "",
   });
 
+  const [verifyTarget, setVerifyTarget] = useState("");
+  const [verifyMode, setVerifyMode] = useState<"email" | "phone">("email");
+  const [registerPayload, setRegisterPayload] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showOTPModal, setShowOTPModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  const router = useRouter();
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string): boolean => {
+    const normalized = phone.replace(/[^\d+]/g, "");
+    return normalized.length >= 7;
   };
 
   const validateUsername = (username: string): boolean => {
@@ -54,11 +65,11 @@ export function Register({ onBack, isDark }: RegisterProps) {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors = {
-      email: "",
+      identifier: "",
       firstName: "",
       lastName: "",
       username: "",
@@ -68,11 +79,16 @@ export function Register({ onBack, isDark }: RegisterProps) {
 
     let hasError = false;
 
-    if (!formData.email) {
-      newErrors.email = "ایمیل الزامی است";
+    if (!formData.identifier) {
+      newErrors.identifier = "ایمیل یا شماره تلفن الزامی است";
       hasError = true;
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = "ایمیل معتبر وارد کنید";
+    } else if (formData.identifier.includes("@")) {
+      if (!validateEmail(formData.identifier)) {
+        newErrors.identifier = "ایمیل معتبر وارد کنید";
+        hasError = true;
+      }
+    } else if (!validatePhone(formData.identifier)) {
+      newErrors.identifier = "شماره تلفن معتبر وارد کنید";
       hasError = true;
     }
 
@@ -120,19 +136,125 @@ export function Register({ onBack, isDark }: RegisterProps) {
 
     if (hasError) return;
 
+    const isEmail = formData.identifier.includes("@");
+    const payload: Record<string, string> = {
+      f_name: formData.firstName,
+      l_name: formData.lastName,
+      username: formData.username,
+      password: formData.password,
+      password_confirmation: formData.confirmPassword,
+    };
+
+    if (isEmail) {
+      payload.email = formData.identifier;
+    } else {
+      payload.phone = formData.identifier.replace(/[^\d+]/g, "");
+    }
+
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const message =
+          data?.message ||
+          data?.errors?.email?.[0] ||
+          data?.errors?.phone?.[0] ||
+          data?.errors?.username?.[0] ||
+          "خطا در ثبت نام";
+        toast.error(message);
+        setIsSubmitting(false);
+        return;
+      }
+
+      setRegisterPayload(payload);
+      setVerifyTarget(isEmail ? payload.email : payload.phone || "");
+      setVerifyMode(isEmail ? "email" : "phone");
       setShowOTPModal(true);
-    }, 1000);
+    } catch (error) {
+      console.error("Register error:", error);
+      toast.error("خطا در اتصال به سرور");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleOTPVerified = (otp: string) => {
-    console.log("OTP verified:", otp);
-    console.log("Registration complete with data:", formData);
-    setShowOTPModal(false);
-    onBack();
-    toast.success("ثبت نام با موفقیت انجام شد");
+  const handleOTPVerified = async (otp: string) => {
+    const isEmail = verifyMode === "email";
+    const payload = isEmail
+      ? { email: registerPayload.email, code: otp }
+      : { phone: registerPayload.phone, otp };
+
+    const endpoint = isEmail ? "/api/auth/register/verify" : "/api/auth/otp/verify";
+
+    try {
+      const response = await fetch(`${apiBaseUrl}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        return { ok: false, message: data?.message || "کد نامعتبر است" };
+      }
+
+      if (data?.access_token) {
+        localStorage.setItem("auth_token", data.access_token);
+        localStorage.setItem("token_type", data.token_type ?? "Bearer");
+      }
+      if (data?.user) {
+        localStorage.setItem("auth_user", JSON.stringify(data.user));
+      }
+
+      setShowOTPModal(false);
+      toast.success("ثبت نام با موفقیت انجام شد");
+      router.push("/dashboard");
+      return { ok: true };
+    } catch (error) {
+      console.error("Verify error:", error);
+      return { ok: false, message: "خطا در اتصال به سرور" };
+    }
+  };
+
+  const handleResend = async () => {
+    if (verifyMode !== "phone") {
+      return { ok: false, message: "امکان ارسال مجدد وجود ندارد" };
+    }
+
+    const payload = {
+      phone: registerPayload.phone,
+      f_name: registerPayload.f_name,
+      l_name: registerPayload.l_name,
+      username: registerPayload.username,
+      email: registerPayload.email,
+    };
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/otp/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        return { ok: false, message: data?.message || "ارسال مجدد ناموفق بود" };
+      }
+
+      return { ok: true };
+    } catch (error) {
+      console.error("Resend error:", error);
+      return { ok: false, message: "خطا در اتصال به سرور" };
+    }
   };
 
   return (
@@ -180,30 +302,30 @@ export function Register({ onBack, isDark }: RegisterProps) {
                 htmlFor="register-email"
                 className="block text-xs text-[color:var(--muted-text)] mb-2 transition-colors duration-300"
               >
-                ایمیل
+                ایمیل یا شماره تلفن
               </label>
               <div className="relative">
                 <input
-                  type="email"
-                  id="register-email"
-                  value={formData.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
+                  type="text"
+                  id="register-identifier"
+                  value={formData.identifier}
+                  onChange={(e) => handleChange("identifier", e.target.value)}
                   className={`w-full px-3 py-2.5 border ${
-                    errors.email
+                    errors.identifier
                       ? "border-red-500 focus:ring-red-500"
                       : "border-[color:var(--surface-muted)] focus:ring-[color:var(--accent)]"
                   } bg-[color:var(--card)] text-[color:var(--brand)] rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-300 pl-9 text-sm`}
-                  placeholder="you@example.com"
+                  placeholder="you@example.com یا 09123456789"
                 />
                 <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[color:var(--muted-text)]" />
               </div>
-              {errors.email && (
+              {errors.identifier && (
                 <motion.p
                   className="text-red-500 text-sm mt-1"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  {errors.email}
+                  {errors.identifier}
                 </motion.p>
               )}
             </motion.div>
@@ -440,9 +562,11 @@ export function Register({ onBack, isDark }: RegisterProps) {
 
       {showOTPModal && (
         <OTPModal
-          email={formData.email}
+          target={verifyTarget}
+          mode={verifyMode}
           onClose={() => setShowOTPModal(false)}
           onVerify={handleOTPVerified}
+          onResend={verifyMode === "phone" ? handleResend : undefined}
           isDark={isDark}
         />
       )}

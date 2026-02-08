@@ -1,18 +1,20 @@
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
-import { X, Mail, RefreshCw } from "lucide-react";
+import { X, Mail, Phone, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 
 interface OTPModalProps {
-  email: string;
+  target: string;
+  mode: "email" | "phone";
   onClose: () => void;
-  onVerify: (otp: string) => void;
+  onVerify: (otp: string) => Promise<{ ok: boolean; message?: string }>;
+  onResend?: () => Promise<{ ok: boolean; message?: string }>;
   isDark: boolean;
 }
 
-export function OTPModal({ email, onClose, onVerify }: OTPModalProps) {
+export function OTPModal({ target, mode, onClose, onVerify, onResend }: OTPModalProps) {
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -25,6 +27,7 @@ export function OTPModal({ email, onClose, onVerify }: OTPModalProps) {
   }, []);
 
   useEffect(() => {
+    if (!onResend) return;
     if (timer > 0) {
       const interval = setInterval(() => {
         setTimer((prev) => prev - 1);
@@ -32,7 +35,7 @@ export function OTPModal({ email, onClose, onVerify }: OTPModalProps) {
       return () => clearInterval(interval);
     }
     setCanResend(true);
-  }, [timer]);
+  }, [timer, onResend]);
 
   const handleChange = (index: number, value: string) => {
     if (value && !/^\d+$/.test(value)) return;
@@ -92,7 +95,7 @@ export function OTPModal({ email, onClose, onVerify }: OTPModalProps) {
     }
   };
 
-  const handleVerify = (otpValue?: string) => {
+  const handleVerify = async (otpValue?: string) => {
     const otpString = otpValue || otp.join("");
 
     if (otpString.length !== 6) {
@@ -101,30 +104,38 @@ export function OTPModal({ email, onClose, onVerify }: OTPModalProps) {
     }
 
     setIsVerifying(true);
-
-    setTimeout(() => {
-      setIsVerifying(false);
-
-      if (otpString === "123456") {
-        onVerify(otpString);
-        toast.success("ایمیل با موفقیت تایید شد");
+    try {
+      const result = await onVerify(otpString);
+      if (result.ok) {
+        toast.success(mode === "email" ? "ایمیل با موفقیت تایید شد" : "شماره تلفن با موفقیت تایید شد");
       } else {
-        setError("کد نامعتبر است");
+        setError(result.message || "کد نامعتبر است");
         setOtp(["", "", "", "", "", ""]);
         inputRefs.current[0]?.focus();
       }
-    }, 1500);
+    } catch (e) {
+      setError("خطا در تایید کد");
+      setOtp(["", "", "", "", "", ""]);
+      inputRefs.current[0]?.focus();
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
-  const handleResend = () => {
-    if (!canResend) return;
+  const handleResend = async () => {
+    if (!canResend || !onResend) return;
 
-    console.log("Resending OTP to:", email);
-    setTimer(60);
-    setCanResend(false);
-    setOtp(["", "", "", "", "", ""]);
-    setError("");
-    inputRefs.current[0]?.focus();
+    const result = await onResend();
+    if (result.ok) {
+      setTimer(60);
+      setCanResend(false);
+      setOtp(["", "", "", "", "", ""]);
+      setError("");
+      inputRefs.current[0]?.focus();
+      toast.success("کد جدید ارسال شد");
+    } else {
+      toast.error(result.message || "ارسال مجدد ناموفق بود");
+    }
   };
 
   return (
@@ -154,13 +165,19 @@ export function OTPModal({ email, onClose, onVerify }: OTPModalProps) {
 
           <div className="text-center mb-6">
             <div className="inline-flex items-center justify-center w-12 h-12 bg-[color:var(--accent-strong)] rounded-full mb-3 shadow-md">
-              <Mail className="w-8 h-8 text-white" />
+              {mode === "email" ? (
+                <Mail className="w-8 h-8 text-white" />
+              ) : (
+                <Phone className="w-8 h-8 text-white" />
+              )}
             </div>
-            <h2 className="text-xl mb-1 transition-colors duration-300">تایید ایمیل</h2>
+            <h2 className="text-xl mb-1 transition-colors duration-300">
+              {mode === "email" ? "تایید ایمیل" : "تایید شماره تلفن"}
+            </h2>
             <p className="text-[color:var(--muted-text)] text-xs transition-colors duration-300">
               کد ۶ رقمی ارسال شد به
             </p>
-            <p className="text-[color:var(--accent-strong)] text-sm font-medium">{email}</p>
+            <p className="text-[color:var(--accent-strong)] text-sm font-medium">{target}</p>
           </div>
 
           <div className="mb-6">
@@ -207,22 +224,24 @@ export function OTPModal({ email, onClose, onVerify }: OTPModalProps) {
             {isVerifying ? "در حال تایید..." : "تایید کد"}
           </motion.button>
 
-          <div className="text-center">
-            {canResend ? (
-              <button
-                onClick={handleResend}
-                className="text-[color:var(--accent-strong)] hover:text-[color:var(--brand)] transition-colors text-sm font-medium inline-flex items-center gap-1"
-              >
-                <RefreshCw className="w-4 h-4" />
-                ارسال دوباره
-              </button>
-            ) : (
-              <p className="text-[color:var(--muted-text)] text-sm">
-                ارسال مجدد تا {" "}
-                <span className="font-semibold text-[color:var(--accent-strong)]">{timer} ثانیه</span>
-              </p>
-            )}
-          </div>
+          {onResend ? (
+            <div className="text-center">
+              {canResend ? (
+                <button
+                  onClick={handleResend}
+                  className="text-[color:var(--accent-strong)] hover:text-[color:var(--brand)] transition-colors text-sm font-medium inline-flex items-center gap-1"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  ارسال دوباره
+                </button>
+              ) : (
+                <p className="text-[color:var(--muted-text)] text-sm">
+                  ارسال مجدد تا{" "}
+                  <span className="font-semibold text-[color:var(--accent-strong)]">{timer} ثانیه</span>
+                </p>
+              )}
+            </div>
+          ) : null}
         </motion.div>
       </div>
     </AnimatePresence>

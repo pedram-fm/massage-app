@@ -8,6 +8,6 @@ class EmailVerificationExpiredException extends RuntimeException
 {
     public function __construct()
     {
-        parent::__construct('Email verification code expired');
+        parent::__construct('کد تایید ایمیل منقضی شده است');
     }
 }

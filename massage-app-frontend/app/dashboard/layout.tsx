@@ -16,7 +16,8 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DashboardModals } from "@/components/DashboardModals";
 import { NewReservationModal } from "@/components/NewReservationModal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const menuItems = [
   { href: "/dashboard", label: "نمای کلی", icon: LayoutDashboard },
@@ -25,9 +26,46 @@ const menuItems = [
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [openProfile, setOpenProfile] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
   const [openReservation, setOpenReservation] = useState(false);
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      router.replace("/auth/login");
+      return;
+    }
+    setIsCheckingAuth(false);
+  }, [router]);
+
+  if (isCheckingAuth) {
+    return null;
+  }
+
+  const handleLogout = async () => {
+    const token = localStorage.getItem("auth_token");
+    const tokenType = localStorage.getItem("token_type") ?? "Bearer";
+
+    try {
+      if (token) {
+        await fetch(`${apiBaseUrl}/api/auth/logout`, {
+          method: "POST",
+          headers: { Authorization: `${tokenType} ${token}`, Accept: "application/json" },
+        });
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("token_type");
+      localStorage.removeItem("auth_user");
+      router.replace("/auth/login");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[color:var(--surface)] text-[color:var(--brand)]">
@@ -124,7 +162,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <button className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--surface-muted)] py-2 text-xs font-semibold text-[color:var(--muted-text)] transition hover:text-[color:var(--brand)]">
+          <button
+            onClick={handleLogout}
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--surface-muted)] py-2 text-xs font-semibold text-[color:var(--muted-text)] transition hover:text-[color:var(--brand)]"
+          >
             <LogOut className="h-4 w-4" />
             خروج
           </button>

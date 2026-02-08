@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -14,40 +14,85 @@ import { toast, Toaster } from "sonner";
 export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isDark, setIsDark] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const [emailError, setEmailError] = useState("");
+  const [identifierError, setIdentifierError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem("auth_token");
+      const tokenType = localStorage.getItem("token_type") ?? "Bearer";
+
+      if (!token) {
+        setIsCheckingAuth(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
+          headers: { Authorization: `${tokenType} ${token}`, Accept: "application/json" },
+        });
+
+        if (response.ok) {
+          router.replace("/dashboard");
+          return;
+        }
+
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("token_type");
+        localStorage.removeItem("auth_user");
+      } catch (error) {
+        console.error("Auth check failed:", error);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [apiBaseUrl, router]);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const validatePhone = (phone: string): boolean => {
+    const normalized = phone.replace(/[^\d+]/g, "");
+    return normalized.length >= 7;
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setEmailError("");
+    setIdentifierError("");
     setPasswordError("");
 
     let hasError = false;
 
-    if (!email) {
-      setEmailError("ایمیل الزامی است");
+    if (!identifier) {
+      setIdentifierError("ایمیل یا شماره تلفن الزامی است");
       hasError = true;
-    } else if (!validateEmail(email)) {
-      setEmailError("ایمیل معتبر وارد کنید");
+    } else if (identifier.includes("@")) {
+      if (!validateEmail(identifier)) {
+        setIdentifierError("ایمیل معتبر وارد کنید");
+        hasError = true;
+      }
+    } else if (!validatePhone(identifier)) {
+      setIdentifierError("شماره تلفن معتبر وارد کنید");
       hasError = true;
     }
 
     if (!password) {
       setPasswordError("رمز عبور الزامی است");
       hasError = true;
-    } else if (password.length < 6) {
-      setPasswordError("رمز عبور حداقل ۶ کاراکتر باشد");
+    } else if (password.length < 8) {
+      setPasswordError("رمز عبور حداقل ۸ کاراکتر باشد");
       hasError = true;
     }
 
@@ -57,15 +102,50 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const isEmail = identifier.includes("@");
+      const payload = isEmail
+        ? { email: identifier, password }
+        : { phone: identifier.replace(/[^\d+]/g, ""), password };
+
+      const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const message = data?.message || "خطا در ورود";
+        toast.error(message);
+        setIsLoading(false);
+        return;
+      }
+
+      if (data?.access_token) {
+        localStorage.setItem("auth_token", data.access_token);
+        localStorage.setItem("token_type", data.token_type ?? "Bearer");
+      }
+      if (data?.user) {
+        localStorage.setItem("auth_user", JSON.stringify(data.user));
+      }
+
       toast.success("خوش آمدید", {
         description: "آماده سفر آرامش باشید",
       });
-      console.log("Login attempt:", { email, password });
       router.push("/dashboard");
-    }, 1500);
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("خطا در اتصال به سرور");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (isCheckingAuth) {
+    return null;
+  }
 
   if (showForgotPassword) {
     return (
@@ -209,33 +289,33 @@ export default function LoginPage() {
                 transition={{ duration: 0.4, delay: 0.5 }}
               >
                 <label
-                  htmlFor="email"
+                  htmlFor="identifier"
                   className="block text-xs text-[color:var(--muted-text)] mb-2 transition-colors duration-300"
                 >
-                  ایمیل
+                  ایمیل یا شماره تلفن
                 </label>
                 <motion.input
-                  type="email"
-                  id="email"
-                  value={email}
+                  type="text"
+                  id="identifier"
+                  value={identifier}
                   onChange={(e) => {
-                    setEmail(e.target.value);
-                    setEmailError("");
+                    setIdentifier(e.target.value);
+                    setIdentifierError("");
                   }}
                   className="w-full px-3 py-2.5 border border-[color:var(--surface-muted)] bg-[color:var(--card)] text-[color:var(--brand)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)] focus:border-transparent transition-all duration-300 text-sm"
-                  placeholder="you@example.com"
+                  placeholder="you@example.com یا 09123456789"
                   whileFocus={{ scale: 1.01 }}
                   required
                 />
                 <AnimatePresence>
-                  {emailError && (
+                  {identifierError && (
                     <motion.p
                       className="text-red-500 text-sm mt-1"
                       initial={{ opacity: 0, y: -10, height: 0 }}
                       animate={{ opacity: 1, y: 0, height: "auto" }}
                       exit={{ opacity: 0, y: -10, height: 0 }}
                     >
-                      {emailError}
+                      {identifierError}
                     </motion.p>
                   )}
                 </AnimatePresence>

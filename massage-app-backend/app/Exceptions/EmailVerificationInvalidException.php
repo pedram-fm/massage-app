@@ -8,6 +8,6 @@ class EmailVerificationInvalidException extends RuntimeException
 {
     public function __construct()
     {
-        parent::__construct('Email verification code invalid');
+        parent::__construct('کد تایید ایمیل نامعتبر است');
     }
 }

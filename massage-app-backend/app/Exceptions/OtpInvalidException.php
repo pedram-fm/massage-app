@@ -8,6 +8,6 @@ class OtpInvalidException extends RuntimeException
 {
     public function __construct()
     {
-        parent::__construct('OTP invalid');
+        parent::__construct('کد یکبار مصرف نامعتبر است');
     }
 }
