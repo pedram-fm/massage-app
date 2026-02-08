@@ -30,4 +30,8 @@ if [ -f storage/oauth-public.key ]; then
   chmod 600 storage/oauth-public.key || true
 fi
 
+if [ "$#" -gt 0 ]; then
+  exec "$@"
+fi
+
 php artisan serve --host=0.0.0.0 --port=8000
