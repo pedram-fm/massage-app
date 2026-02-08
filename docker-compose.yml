@@ -7,6 +7,11 @@ services:
       POSTGRES_USER: pedram
       POSTGRES_PASSWORD: pedram_fm
       POSTGRES_DB: massage_app
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pedram -d massage_app -h 127.0.0.1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     ports:
       - "5432:5432"
     volumes:
@@ -34,7 +39,8 @@ services:
       DB_USERNAME: pedram
       DB_PASSWORD: pedram_fm
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   backend-init:
     build:
@@ -56,7 +62,8 @@ services:
       DB_USERNAME: pedram
       DB_PASSWORD: pedram_fm
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     profiles:
       - init
 
