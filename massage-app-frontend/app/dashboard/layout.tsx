@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import type { ReactNode } from "react";
 import Link from "next/link";
@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   LogOut,
   Search,
-  Settings,
   SlidersHorizontal,
   User,
 } from "lucide-react";
@@ -21,7 +20,7 @@ import { useRouter } from "next/navigation";
 
 const menuItems = [
   { href: "/dashboard", label: "نمای کلی", icon: LayoutDashboard },
-  { href: "/dashboard/appointments", label: "جلسه های من", icon: Calendar },
+  { href: "/dashboard/appointments", label: "جلسه‌های من", icon: Calendar },
   { href: "/dashboard/notes", label: "یادداشت درمانگر", icon: ClipboardList },
 ];
 
@@ -129,7 +128,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <div>
               <p className="text-sm text-[color:var(--muted-text)]">پنل مشتری</p>
               <p className="text-lg font-semibold" style={{ fontFamily: "var(--font-display)" }}>
-                سرنیتی اسپا
+                ماساژ اپ
               </p>
             </div>
           </div>
@@ -179,10 +178,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         onCloseSettings={() => setOpenSettings(false)}
       />
 
-      <NewReservationModal
-        open={openReservation}
-        onClose={() => setOpenReservation(false)}
-      />
+      <NewReservationModal open={openReservation} onClose={() => setOpenReservation(false)} />
     </div>
   );
 }
