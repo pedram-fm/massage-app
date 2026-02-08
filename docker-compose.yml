@@ -25,6 +25,8 @@ services:
     working_dir: /var/www
     user: root
     command: sh /var/www/docker/start.sh php-fpm -F
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./massage-app-backend:/var/www
     expose:
