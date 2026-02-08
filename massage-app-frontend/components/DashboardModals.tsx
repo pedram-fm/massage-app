@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Camera, Trash2, Upload, X } from "lucide-react";
+import { X } from "lucide-react";
 
 const inputBase =
-  "w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm text-[color:var(--brand)] placeholder:text-[color:var(--muted-text)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]";
+  "w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm text-[color:var(--brand)] placeholder:text-[color:var(--muted-text)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)] disabled:cursor-not-allowed disabled:opacity-70";
 
 export function DashboardModals({
   openProfile,
@@ -17,19 +17,178 @@ export function DashboardModals({
   onCloseProfile: () => void;
   onCloseSettings: () => void;
 }) {
-  const [name, setName] = useState("ندا حسینی");
-  const [role, setRole] = useState("مدیر شعبه");
-  const [phone, setPhone] = useState("۰۹۱۲۳۴۵۶۷۸۹");
-  const [email, setEmail] = useState("neda@serenityspa.com");
-  const [bio, setBio] = useState("متخصص تجربه مشتری و طراحی پروتکل درمانی.");
-  const [file, setFile] = useState<File | null>(null);
+  const [profile, setProfile] = useState({
+    f_name: "",
+    l_name: "",
+    username: "",
+    email: "",
+    phone: "",
+    bio: "",
+    avatar_url: "",
+  });
+  const [emailVerifiedAt, setEmailVerifiedAt] = useState<string | null>(null);
+  const [phoneVerifiedAt, setPhoneVerifiedAt] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
-  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  const initials = useMemo(() => {
+    const first = profile.f_name?.trim()?.charAt(0) ?? "";
+    const last = profile.l_name?.trim()?.charAt(0) ?? "";
+    const combined = `${first}${last}`.trim();
+    return combined || "کاربر";
+  }, [profile.f_name, profile.l_name]);
 
   useEffect(() => {
-    if (!previewUrl) return;
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [previewUrl]);
+    if (!openProfile) return;
+
+    setStatusMessage("");
+    setErrorMessage("");
+    const stored = localStorage.getItem("auth_user");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setProfile({
+          f_name: parsed?.f_name ?? "",
+          l_name: parsed?.l_name ?? "",
+          username: parsed?.username ?? "",
+          email: parsed?.email ?? "",
+          phone: parsed?.phone ?? "",
+          bio: parsed?.bio ?? "",
+          avatar_url: parsed?.avatar_url ?? "",
+        });
+        setEmailVerifiedAt(parsed?.email_verified_at ?? null);
+        setPhoneVerifiedAt(parsed?.phone_verified_at ?? null);
+      } catch {
+        // ignore parsing issues
+      }
+    }
+
+    const token = localStorage.getItem("auth_token");
+    const tokenType = localStorage.getItem("token_type") ?? "Bearer";
+    if (!token) return;
+
+    setIsLoading(true);
+    fetch(`${apiBaseUrl}/api/auth/me`, {
+      headers: { Authorization: `${tokenType} ${token}`, Accept: "application/json" },
+    })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data?.message || "خطا در دریافت اطلاعات کاربر");
+        }
+        setProfile({
+          f_name: data?.f_name ?? "",
+          l_name: data?.l_name ?? "",
+          username: data?.username ?? "",
+          email: data?.email ?? "",
+          phone: data?.phone ?? "",
+          bio: data?.bio ?? "",
+          avatar_url: data?.avatar_url ?? "",
+        });
+        setEmailVerifiedAt(data?.email_verified_at ?? null);
+        setPhoneVerifiedAt(data?.phone_verified_at ?? null);
+        localStorage.setItem("auth_user", JSON.stringify(data));
+      })
+      .catch((error: Error) => {
+        setErrorMessage(error.message || "خطا در دریافت اطلاعات کاربر");
+      })
+      .finally(() => setIsLoading(false));
+  }, [apiBaseUrl, openProfile]);
+
+  const handleProfileChange = (field: keyof typeof profile, value: string) => {
+    setProfile((prev) => ({ ...prev, [field]: value }));
+    setStatusMessage("");
+    setErrorMessage("");
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    setStatusMessage("");
+    setErrorMessage("");
+
+    const token = localStorage.getItem("auth_token");
+    const tokenType = localStorage.getItem("token_type") ?? "Bearer";
+
+    if (!token) {
+      setErrorMessage("ابتدا وارد حساب خود شوید.");
+      setIsSaving(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `${tokenType} ${token}`,
+        },
+        body: JSON.stringify({
+          f_name: profile.f_name,
+          l_name: profile.l_name,
+          username: profile.username,
+          bio: profile.bio,
+          avatar_url: profile.avatar_url,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const message =
+          data?.message ||
+          data?.errors?.f_name?.[0] ||
+          data?.errors?.l_name?.[0] ||
+          data?.errors?.username?.[0] ||
+          "خطا در ذخیره پروفایل";
+        throw new Error(message);
+      }
+
+      if (data?.user) {
+        setProfile({
+          f_name: data.user?.f_name ?? "",
+          l_name: data.user?.l_name ?? "",
+          username: data.user?.username ?? "",
+          email: data.user?.email ?? profile.email,
+          phone: data.user?.phone ?? profile.phone,
+          bio: data.user?.bio ?? "",
+          avatar_url: data.user?.avatar_url ?? "",
+        });
+        localStorage.setItem("auth_user", JSON.stringify(data.user));
+      }
+
+      setStatusMessage(data?.message || "پروفایل با موفقیت به‌روزرسانی شد");
+
+      try {
+        const refreshed = await fetch(`${apiBaseUrl}/api/auth/me`, {
+          headers: { Authorization: `${tokenType} ${token}`, Accept: "application/json" },
+        });
+        if (refreshed.ok) {
+          const freshData = await refreshed.json().catch(() => ({}));
+          if (freshData) {
+            setProfile({
+              f_name: freshData?.f_name ?? "",
+              l_name: freshData?.l_name ?? "",
+              username: freshData?.username ?? "",
+              email: freshData?.email ?? profile.email,
+              phone: freshData?.phone ?? profile.phone,
+              bio: freshData?.bio ?? "",
+              avatar_url: freshData?.avatar_url ?? "",
+            });
+            localStorage.setItem("auth_user", JSON.stringify(freshData));
+          }
+        }
+      } catch {
+        // ignore refresh errors
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "خطا در ذخیره پروفایل");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <>
@@ -59,85 +218,108 @@ export function DashboardModals({
               <div className="grid gap-3">
                 <label className="text-xs text-[color:var(--muted-text)]">تصویر پروفایل</label>
                 <div className="flex flex-wrap items-center gap-4">
-                  <div className="relative h-20 w-20 overflow-hidden rounded-3xl border border-[color:var(--surface-muted)] bg-[color:var(--surface-muted)]">
-                    {previewUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={previewUrl} alt="preview" className="h-full w-full object-cover" />
+                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl border border-[color:var(--surface-muted)] bg-[color:var(--surface-muted)] text-sm font-semibold text-[color:var(--muted-text)]">
+                    {profile.avatar_url ? (
+                      <img
+                        src={profile.avatar_url}
+                        alt="Profile photo"
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-[color:var(--muted-text)]">
-                        ن ه
-                      </div>
+                      initials
                     )}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/35 opacity-0 transition hover:opacity-100">
-                      <Camera className="h-5 w-5 text-white" />
-                    </div>
                   </div>
-
-                  <div className="grid gap-2">
-                    <input
-                      id="profile-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="profile-upload"
-                      className="inline-flex w-fit items-center gap-2 rounded-full border border-[color:var(--surface-muted)] bg-[color:var(--surface)] px-4 py-2 text-xs font-medium text-[color:var(--muted-text)] transition hover:text-[color:var(--brand)]"
-                    >
-                      <Upload className="h-4 w-4" />
-                      انتخاب تصویر
-                    </label>
-                    <p className="text-xs text-[color:var(--muted-text)]">
-                      PNG یا JPG، حداکثر ۵ مگابایت
+                  <div className="grid gap-1">
+                    <p className="text-sm font-medium">
+                      {profile.f_name} {profile.l_name}
                     </p>
-                    {file && (
-                      <div className="flex items-center gap-2 text-xs text-[color:var(--muted-text)]">
-                        <span className="max-w-[180px] truncate">{file.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => setFile(null)}
-                          className="inline-flex items-center gap-1 rounded-full border border-[color:var(--surface-muted)] px-2 py-1 text-[color:var(--muted-text)] transition hover:text-[color:var(--brand)]"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                          حذف
-                        </button>
-                      </div>
-                    )}
+                    <p className="text-xs text-[color:var(--muted-text)]">@{profile.username}</p>
                   </div>
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-xs text-[color:var(--muted-text)]">نام و نام خانوادگی</label>
-                  <input className={inputBase} value={name} onChange={(e) => setName(e.target.value)} />
+                  <label className="mb-2 block text-xs text-[color:var(--muted-text)]">نام</label>
+                  <input
+                    className={inputBase}
+                    value={profile.f_name}
+                    onChange={(e) => handleProfileChange("f_name", e.target.value)}
+                    placeholder="نام"
+                  />
                 </div>
                 <div>
-                  <label className="mb-2 block text-xs text-[color:var(--muted-text)]">عنوان شغلی</label>
-                  <input className={inputBase} value={role} onChange={(e) => setRole(e.target.value)} />
+                  <label className="mb-2 block text-xs text-[color:var(--muted-text)]">
+                    نام خانوادگی
+                  </label>
+                  <input
+                    className={inputBase}
+                    value={profile.l_name}
+                    onChange={(e) => handleProfileChange("l_name", e.target.value)}
+                    placeholder="نام خانوادگی"
+                  />
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-xs text-[color:var(--muted-text)]">شماره تماس</label>
-                  <input className={inputBase} value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <label className="mb-2 block text-xs text-[color:var(--muted-text)]">
+                    نام کاربری
+                  </label>
+                  <input
+                    className={inputBase}
+                    value={profile.username}
+                    onChange={(e) => handleProfileChange("username", e.target.value)}
+                    placeholder="نام کاربری"
+                  />
                 </div>
                 <div>
                   <label className="mb-2 block text-xs text-[color:var(--muted-text)]">ایمیل</label>
-                  <input className={inputBase} value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <input className={inputBase} value={profile.email} disabled />
+                  <p className="mt-1 text-[11px] text-[color:var(--muted-text)]">
+                    {emailVerifiedAt ? "ایمیل تایید شده است" : "ایمیل تایید نشده است"}
+                  </p>
                 </div>
               </div>
 
               <div>
-                <label className="mb-2 block text-xs text-[color:var(--muted-text)]">بیو کوتاه</label>
-                <textarea
-                  className="min-h-[90px] w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm text-[color:var(--brand)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
+                <label className="mb-2 block text-xs text-[color:var(--muted-text)]">
+                  شماره تماس
+                </label>
+                <input className={inputBase} value={profile.phone} disabled />
+                <p className="mt-1 text-[11px] text-[color:var(--muted-text)]">
+                  {phoneVerifiedAt ? "شماره تلفن تایید شده است" : "شماره تلفن تایید نشده است"}
+                </p>
+              </div>
+              <div>
+                <label className="mb-2 block text-xs text-[color:var(--muted-text)]">
+                  Profile photo URL
+                </label>
+                <input
+                  className={inputBase}
+                  value={profile.avatar_url}
+                  onChange={(e) => handleProfileChange("avatar_url", e.target.value)}
+                  placeholder="https://..."
                 />
               </div>
+
+              <div>
+                <label className="mb-2 block text-xs text-[color:var(--muted-text)]">Bio</label>
+                <textarea
+                  className={`${inputBase} min-h-[110px] resize-none`}
+                  value={profile.bio}
+                  onChange={(e) => handleProfileChange("bio", e.target.value)}
+                  placeholder="A short bio about you..."
+                />
+              </div>
+
+              {isLoading && (
+                <p className="text-xs text-[color:var(--muted-text)]">Loading profile...</p>
+              )}
+              {statusMessage && (
+                <p className="text-xs text-[color:var(--accent-strong)]">{statusMessage}</p>
+              )}
+              {errorMessage && <p className="text-xs text-red-500">{errorMessage}</p>}
 
               <div className="flex flex-wrap items-center justify-end gap-3">
                 <button
@@ -146,8 +328,12 @@ export function DashboardModals({
                 >
                   انصراف
                 </button>
-                <button className="rounded-full bg-[color:var(--brand)] px-5 py-2 text-xs font-semibold text-[color:var(--brand-foreground)]">
-                  ذخیره تغییرات
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={isSaving}
+                  className="rounded-full bg-[color:var(--brand)] px-5 py-2 text-xs font-semibold text-[color:var(--brand-foreground)] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSaving ? "در حال ذخیره..." : "ذخیره تغییرات"}
                 </button>
               </div>
             </div>
@@ -179,7 +365,7 @@ export function DashboardModals({
 
             <div className="grid gap-4 text-sm">
               {[
-                "فعال سازی اعلان پیامک برای نوبت ها",
+                "فعال سازی اعلان پیامک برای نوبت‌ها",
                 "نمایش تقویم هفته به هفته",
                 "ثبت خودکار گزارش بعد از جلسه",
               ].map((item) => (
