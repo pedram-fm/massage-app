@@ -1,10 +1,19 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 export function useAuthApi() {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+    const apiBaseUrl = useMemo(() => {
+        if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+            return process.env.NEXT_PUBLIC_API_BASE_URL;
+        }
+        if (typeof window !== "undefined") {
+            const { protocol, hostname } = window.location;
+            return `${protocol}//${hostname}:8000`;
+        }
+        return "http://localhost:8000";
+    }, []);
     const router = useRouter();
 
     const register = async (payload: Record<string, any>) => {

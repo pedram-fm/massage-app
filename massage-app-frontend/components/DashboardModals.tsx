@@ -32,7 +32,16 @@ export function DashboardModals({
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  const apiBaseUrl = useMemo(() => {
+    if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+      return process.env.NEXT_PUBLIC_API_BASE_URL;
+    }
+    if (typeof window !== "undefined") {
+      const { protocol, hostname } = window.location;
+      return `${protocol}//${hostname}:8000`;
+    }
+    return "http://localhost:8000";
+  }, []);
 
   const initials = useMemo(() => {
     const first = profile.f_name?.trim()?.charAt(0) ?? "";

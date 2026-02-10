@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { OTPModal } from "./OTPModal";
@@ -23,7 +23,16 @@ export function ForgotPassword({ onBack, isDark }: ForgotPasswordProps) {
   const [passwordError, setPasswordError] = useState("");
   const [confirmError, setConfirmError] = useState("");
   const [isResetting, setIsResetting] = useState(false);
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  const apiBaseUrl = useMemo(() => {
+    if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+      return process.env.NEXT_PUBLIC_API_BASE_URL;
+    }
+    if (typeof window !== "undefined") {
+      const { protocol, hostname } = window.location;
+      return `${protocol}//${hostname}:8000`;
+    }
+    return "http://localhost:8000";
+  }, []);
 
   const resetFlow = () => {
     setEmail("");

@@ -15,7 +15,7 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DashboardModals } from "@/components/DashboardModals";
 import { NewReservationModal } from "@/components/NewReservationModal";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const menuItems = [
@@ -30,7 +30,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [openProfile, setOpenProfile] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
   const [openReservation, setOpenReservation] = useState(false);
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  const apiBaseUrl = useMemo(() => {
+    if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+      return process.env.NEXT_PUBLIC_API_BASE_URL;
+    }
+    if (typeof window !== "undefined") {
+      const { protocol, hostname } = window.location;
+      return `${protocol}//${hostname}:8000`;
+    }
+    return "http://localhost:8000";
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
