@@ -230,22 +230,19 @@ html {
   inset: 0;
   pointer-events: none;
   z-index: 30;
-  transition: background 160ms ease-out;
+  transition: opacity 800ms ease-out, background 0ms;
 }
 
 .dark .cloud-spotlight {
-  background: radial-gradient(
-    circle at var(--spot-x, 85%) var(--spot-y, 85%),
-    rgba(255, 255, 255, 0.24) 0%,
-    rgba(255, 255, 255, 0.10) 16%,
-    rgba(0, 0, 0, 0) 30%
-  );
+  background: radial-gradient(circle 600px at var(--spot-x, 50%) var(--spot-y, 50%),
+      rgba(255, 255, 255, 0.15) 0%,
+      rgba(255, 255, 255, 0.05) 20%,
+      transparent 60%);
+  mix-blend-mode: screen;
 }
 
 .dark .cloud-lamp {
-  box-shadow:
-    0 12px 28px rgba(0, 0, 0, 0.4),
-    0 0 24px rgba(255, 255, 255, 0.35);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
 }
 
 .cloud-buddy {

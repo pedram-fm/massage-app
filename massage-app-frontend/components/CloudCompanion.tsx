@@ -13,89 +13,72 @@ const moods = [
 
 export function CloudCompanion() {
   const [index, setIndex] = useState(0);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
-  const [bounds, setBounds] = useState({ left: 12, top: 12, right: 0, bottom: 0 });
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Use a ref for the spotlight to update it without re-renders
+  const spotlightRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
   const size = useRef({ width: 220, height: 90 });
   const mood = useMemo(() => moods[index % moods.length], [index]);
 
-  const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
-
   useEffect(() => {
-    const updateBounds = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      const elementWidth = size.current.width;
-      const elementHeight = size.current.height;
-      setBounds({
-        left: -elementWidth / 2 + 12,
-        top: -elementHeight / 2 + 12,
-        right: Math.max(12, width - elementWidth / 2 - 12),
-        bottom: Math.max(12, height - elementHeight / 2 - 12),
-      });
-      setPosition({ x: Math.max(12, width - elementWidth), y: Math.max(12, height - elementHeight) });
-    };
+    setMounted(true);
 
-    updateBounds();
-    const measure = () => {
-      if (!buttonRef.current) return;
+    // Initial measurement
+    if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       size.current = { width: rect.width, height: rect.height };
-      updateBounds();
-    };
-    measure();
-    window.addEventListener("resize", measure);
-    window.addEventListener("resize", updateBounds);
-    return () => {
-      window.removeEventListener("resize", updateBounds);
-      window.removeEventListener("resize", measure);
-    };
+    }
   }, []);
+
+  const handleDrag = (event: any, info: any) => {
+    if (!spotlightRef.current || !buttonRef.current) return;
+
+    // Calculate center of the element
+    const rect = buttonRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    spotlightRef.current.style.setProperty("--spot-x", `${centerX}px`);
+    spotlightRef.current.style.setProperty("--spot-y", `${centerY}px`);
+    spotlightRef.current.style.opacity = "1";
+  };
+
+  if (!mounted) return null;
 
   return (
     <>
-      {pointer && (
-        <div
-          className="cloud-spotlight"
-          style={
-            {
-              "--spot-x": `${pointer.x}px`,
-              "--spot-y": `${pointer.y}px`,
-            } as React.CSSProperties
-          }
-        />
-      )}
+      <div
+        ref={spotlightRef}
+        className="cloud-spotlight opacity-0"
+        style={
+          {
+            "--spot-x": "0px",
+            "--spot-y": "0px",
+          } as React.CSSProperties
+        }
+      />
       <motion.button
         type="button"
-        onClick={() => setIndex((prev) => prev + 1)}
         ref={buttonRef}
+        onClick={() => setIndex((prev) => prev + 1)}
         className="cloud-lamp fixed z-40 flex items-center gap-3 rounded-full border border-[color:var(--surface-muted)] bg-[color:var(--card)]/90 px-4 py-3 shadow-lg backdrop-blur-md"
-        style={{ left: position.x, top: position.y }}
+        // Initial position bottom-right
+        initial={{ bottom: 24, right: 24, x: 0, y: 0, opacity: 0 }}
+        animate={{ opacity: 1 }}
         drag
-        dragMomentum={false}
-        dragConstraints={bounds}
-        dragElastic={0}
-        onDragStart={(_, info) => {
-          setPointer({ x: info.point.x, y: info.point.y });
+        dragMomentum={true}
+        dragElastic={0.1}
+        onDragStart={() => {
+          if (spotlightRef.current) spotlightRef.current.style.opacity = "1";
         }}
-        onDrag={(_, info) => {
-          setPointer({ x: info.point.x, y: info.point.y });
-          const nextX = clamp(
-            info.point.x - size.current.width / 2,
-            bounds.left,
-            bounds.right
-          );
-          const nextY = clamp(
-            info.point.y - size.current.height / 2,
-            bounds.top,
-            bounds.bottom
-          );
-          setPosition({ x: nextX, y: nextY });
+        onDrag={handleDrag}
+        onDragEnd={(e, info) => {
+          // Ensure final position is recorded for the light
+          handleDrag(e, info);
+          // Keep light visible, do not set opacity to 0
         }}
-        onDragEnd={() => setPointer(null)}
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
