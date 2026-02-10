@@ -7,7 +7,7 @@ export function useAuthApi() {
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
     const router = useRouter();
 
-    const register = async (payload: Record<string, string>) => {
+    const register = async (payload: Record<string, any>) => {
         setIsSubmitting(true);
         try {
             const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
@@ -39,7 +39,7 @@ export function useAuthApi() {
         }
     };
 
-    const verify = async (endpoint: string, payload: Record<string, string>) => {
+    const verify = async (endpoint: string, payload: Record<string, any>) => {
         try {
             const response = await fetch(`${apiBaseUrl}${endpoint}`, {
                 method: "POST",
@@ -70,7 +70,7 @@ export function useAuthApi() {
         }
     };
 
-    const resend = async (endpoint: string, payload: Record<string, string>) => {
+    const resend = async (endpoint: string, payload: Record<string, any>) => {
         try {
             const response = await fetch(`${apiBaseUrl}${endpoint}`, {
                 method: "POST",
