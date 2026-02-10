@@ -8,14 +8,14 @@ use App\Services\Auth\OtpService;
 class RequestOtpAction
 {
     public function __construct(
-        private readonly OtpService $otpService,
+        private readonly \App\Contracts\Services\OtpServiceInterface $otpService,
         private readonly OtpSender $otpSender,
     ) {
     }
 
-    public function execute(array $data): array
+    public function execute(\App\DTOs\Auth\OtpRequestData $data): array
     {
-        $user = $this->otpService->upsertUser($data);
+        $user = $this->otpService->upsertUser($data->toArray());
         $otp = $this->otpService->issueOtp($user);
         $this->otpSender->send($user->phone, $otp);
 

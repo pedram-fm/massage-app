@@ -74,7 +74,9 @@ class AuthController extends Controller
             return $response;
         }
 
-        $result = $this->requestOtpAction->execute($data);
+        $result = $this->requestOtpAction->execute(
+            \App\DTOs\Auth\OtpRequestData::fromRequest($request)
+        );
 
         $response = ['message' => 'کد یکبار مصرف ارسال شد'];
 
@@ -131,7 +133,9 @@ class AuthController extends Controller
     #[Group('Auth (Public)', weight: 1)]
     public function register(RegisterRequest $request): JsonResponse
     {
-        $result = $this->registerRequestAction->execute($request->validated());
+        $result = $this->registerRequestAction->execute(
+            \App\DTOs\Auth\UserRegistrationData::fromRequest($request)
+        );
 
         $response = [
             'message' => $result['channel'] === 'email' ? 'کد تایید ایمیل ارسال شد' : 'کد یکبار مصرف ارسال شد',
@@ -164,7 +168,9 @@ class AuthController extends Controller
     public function login(LoginRequest $request): JsonResponse
     {
         try {
-            $result = $this->loginAction->execute($request->validated());
+            $result = $this->loginAction->execute(
+                \App\DTOs\Auth\UserLoginData::fromRequest($request)
+            );
         } catch (InvalidCredentialsException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
         } catch (EmailNotVerifiedException | PhoneNotVerifiedException $exception) {

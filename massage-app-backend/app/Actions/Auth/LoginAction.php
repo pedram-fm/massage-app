@@ -13,21 +13,22 @@ class LoginAction
 {
     public function __construct(
         private readonly TokenService $tokenService,
+        private readonly \App\Contracts\Repositories\UserRepositoryInterface $userRepository
     ) {
     }
 
-    public function execute(array $data): array
+    public function execute(\App\DTOs\Auth\UserLoginData $data): array
     {
         $user = null;
-        $usingEmail = !empty($data['email']);
+        $usingEmail = !empty($data->email);
 
         if ($usingEmail) {
-            $user = User::where('email', $data['email'])->first();
-        } elseif (!empty($data['phone'])) {
-            $user = User::where('phone', $data['phone'])->first();
+            $user = $this->userRepository->findByEmail($data->email);
+        } elseif (!empty($data->phone)) {
+            $user = $this->userRepository->findByPhone($data->phone);
         }
 
-        if (!$user || !$user->password || !Hash::check($data['password'], $user->password)) {
+        if (!$user || !$user->password || !Hash::check($data->password, $user->password)) {
             throw new InvalidCredentialsException();
         }
 
@@ -40,7 +41,7 @@ class LoginAction
         }
 
         $user->last_login_at = now();
-        $user->save();
+        $this->userRepository->save($user);
 
         return [
             'user' => $user,

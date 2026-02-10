@@ -8,22 +8,26 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 
-class OtpService
+use App\Contracts\Services\OtpServiceInterface;
+
+class OtpService implements OtpServiceInterface
 {
+    public function __construct(
+        private readonly \App\Contracts\Repositories\UserRepositoryInterface $userRepository
+    ) {
+    }
+
     public function upsertUser(array $data): User
     {
-        $user = User::where('phone', $data['phone'])->first() ?? new User(['phone' => $data['phone']]);
-
-        $user->fill(array_filter([
+        $search = ['phone' => $data['phone']];
+        $updateData = array_filter([
             'f_name' => $data['f_name'] ?? null,
             'l_name' => $data['l_name'] ?? null,
             'username' => $data['username'] ?? null,
             'email' => $data['email'] ?? null,
-        ], fn ($value) => $value !== null));
+        ], fn ($value) => $value !== null);
 
-        $user->save();
-
-        return $user;
+        return $this->userRepository->upsert($search, $updateData);
     }
 
     public function issueOtp(User $user): string
@@ -33,7 +37,7 @@ class OtpService
         $user->otp_hash = Hash::make($otp);
         $user->otp_expires_at = Carbon::now()->addMinutes(5);
         $user->otp_sent_at = Carbon::now();
-        $user->save();
+        $this->userRepository->save($user);
 
         return $otp;
     }
@@ -57,6 +61,6 @@ class OtpService
         $user->otp_sent_at = null;
         $user->phone_verified_at = $user->phone_verified_at ?? Carbon::now();
         $user->last_login_at = Carbon::now();
-        $user->save();
+        $this->userRepository->save($user);
     }
 }

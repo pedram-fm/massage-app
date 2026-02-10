@@ -10,6 +10,10 @@ use App\Services\Auth\LogEmailCodeSender;
 use App\Services\Auth\SmtpEmailCodeSender;
 use App\Services\Auth\LogPasswordResetCodeSender;
 use App\Services\Auth\SmtpPasswordResetCodeSender;
+use App\Contracts\Repositories\UserRepositoryInterface;
+use App\Repositories\Eloquent\UserRepository;
+use App\Contracts\Services\OtpServiceInterface;
+use App\Services\Auth\OtpService;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\Operation;
@@ -45,6 +49,9 @@ class AppServiceProvider extends ServiceProvider
 
             return new SmtpPasswordResetCodeSender();
         });
+
+        $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
+        $this->app->bind(OtpServiceInterface::class, OtpService::class);
     }
 
     /**

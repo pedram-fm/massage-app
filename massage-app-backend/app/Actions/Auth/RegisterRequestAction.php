@@ -14,23 +14,27 @@ class RegisterRequestAction
     public function __construct(
         private readonly EmailVerificationService $emailVerificationService,
         private readonly EmailCodeSender $emailCodeSender,
-        private readonly OtpService $otpService,
+        private readonly \App\Contracts\Services\OtpServiceInterface $otpService,
         private readonly OtpSender $otpSender,
+        private readonly \App\Contracts\Repositories\UserRepositoryInterface $userRepository,
     ) {
     }
 
-    public function execute(array $data): array
+    public function execute(\App\DTOs\Auth\UserRegistrationData $data): array
     {
-        $user = User::create([
-            'f_name' => $data['f_name'],
-            'l_name' => $data['l_name'],
-            'username' => $data['username'],
-            'email' => $data['email'] ?? null,
-            'phone' => $data['phone'] ?? null,
-            'password' => Hash::make($data['password']),
-        ]);
+        $userData = $data->toArray();
+        $userData['password'] = Hash::make($data->password);
+        
+        // We need to handle the creation via repository. 
+        // Since upsert is available, we can use it or add a create method. 
+        // For now, let's use upsert with a dummy search or just add create to interface? 
+        // The interface has upsert and save. 
+        // Let's use save.
+        
+        $user = new User($userData);
+        $this->userRepository->save($user);
 
-        if (!empty($data['email'])) {
+        if (!empty($data->email)) {
             $code = $this->emailVerificationService->issueCode($user);
             $this->emailCodeSender->send($user->email, $code);
 
