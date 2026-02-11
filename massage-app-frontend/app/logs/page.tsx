@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type LogPayload = {
   lines: string[];
@@ -25,7 +25,7 @@ export default function LogsPage() {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`/api/logs/tail?lines=${requestedLines}`, {
@@ -45,17 +45,17 @@ export default function LogsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [requestedLines]);
 
   useEffect(() => {
     fetchLogs();
-  }, [requestedLines]);
+  }, [fetchLogs]);
 
   useEffect(() => {
     if (paused) return;
     const interval = setInterval(fetchLogs, REFRESH_MS);
     return () => clearInterval(interval);
-  }, [paused, requestedLines]);
+  }, [fetchLogs, paused]);
 
   useEffect(() => {
     if (!autoScroll || !scrollRef.current) return;

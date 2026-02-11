@@ -380,13 +380,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="border-t border-[color:var(--surface-muted)] bg-[color:var(--card)]/80">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-6 text-xs uppercase tracking-[0.2em] text-[color:var(--muted-text)]">
-          <span>سرنیتی اسپا</span>
-          <span>ماساژ درمانی و تندرستی</span>
-          <span>صرفا با رزرو قبلی</span>
-        </div>
-      </footer>
+        <footer className="border-t border-[color:var(--surface-muted)] bg-[color:var(--card)]/80">
+          <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-6 text-xs uppercase tracking-[0.2em] text-[color:var(--muted-text)]">
+            <span>سرنیتی اسپا</span>
+            <span>ماساژ درمانی و تندرستی</span>
+            <span>صرفا با رزرو قبلی</span>
+          </div>
+        </footer>
     </div>
   );
 }

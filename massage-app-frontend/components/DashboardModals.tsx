@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
+import Image from "next/image";
+import { getApiBaseUrl } from "@/lib/api";
 
 const inputBase =
   "w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm text-[color:var(--brand)] placeholder:text-[color:var(--muted-text)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)] disabled:cursor-not-allowed disabled:opacity-70";
@@ -32,16 +34,7 @@ export function DashboardModals({
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const apiBaseUrl = useMemo(() => {
-    if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-      return process.env.NEXT_PUBLIC_API_BASE_URL;
-    }
-    if (typeof window !== "undefined") {
-      const { protocol, hostname } = window.location;
-      return `${protocol}//${hostname}:8000`;
-    }
-    return "http://localhost:8000";
-  }, []);
+  const apiBaseUrl = useMemo(() => getApiBaseUrl(), []);
 
   const initials = useMemo(() => {
     const first = profile.f_name?.trim()?.charAt(0) ?? "";
@@ -229,9 +222,13 @@ export function DashboardModals({
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl border border-[color:var(--surface-muted)] bg-[color:var(--surface-muted)] text-sm font-semibold text-[color:var(--muted-text)]">
                     {profile.avatar_url ? (
-                      <img
+                      <Image
                         src={profile.avatar_url}
                         alt="Profile photo"
+                        loader={({ src }) => src}
+                        unoptimized
+                        width={80}
+                        height={80}
                         className="h-full w-full object-cover"
                       />
                     ) : (

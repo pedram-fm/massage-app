@@ -8,7 +8,9 @@ import { motion, AnimatePresence } from "motion/react";
 import { ForgotPassword } from "@/components/ForgotPassword";
 import { Register } from "@/components/Register";
 import { FloatingElements } from "@/components/FloatingElements";
+import { CloudCompanion } from "@/components/CloudCompanion";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { getApiBaseUrl } from "@/lib/api";
 import { toast, Toaster } from "sonner";
 
 export default function LoginPage() {
@@ -22,16 +24,7 @@ export default function LoginPage() {
   const [identifierError, setIdentifierError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const apiBaseUrl = useMemo(() => {
-    if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-      return process.env.NEXT_PUBLIC_API_BASE_URL;
-    }
-    if (typeof window !== "undefined") {
-      const { protocol, hostname } = window.location;
-      return `${protocol}//${hostname}:8000`;
-    }
-    return "http://localhost:8000";
-  }, []);
+  const apiBaseUrl = useMemo(() => getApiBaseUrl(), []);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
@@ -181,6 +174,7 @@ export default function LoginPage() {
               isDark={isDark}
             />
           </div>
+          <CloudCompanion />
         </div>
       </>
     );
@@ -211,6 +205,7 @@ export default function LoginPage() {
               isDark={isDark}
             />
           </div>
+          <CloudCompanion />
         </div>
       </>
     );
@@ -530,6 +525,7 @@ export default function LoginPage() {
             </motion.p>
           </motion.div>
         </div>
+        <CloudCompanion />
       </div>
     </>
   );

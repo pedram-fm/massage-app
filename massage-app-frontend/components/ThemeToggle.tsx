@@ -21,22 +21,32 @@ export function ThemeToggle({
   onChange?: (isDark: boolean) => void;
   className?: string;
 }) {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => getPreferredTheme() === "dark");
 
   useEffect(() => {
-    const theme = getPreferredTheme();
-    const nextIsDark = theme === "dark";
-    setIsDark(nextIsDark);
-    document.documentElement.classList.toggle("dark", nextIsDark);
-    onChange?.(nextIsDark);
-  }, [onChange]);
+    document.documentElement.classList.toggle("dark", isDark);
+    onChange?.(isDark);
+  }, [isDark, onChange]);
+
+  useEffect(() => {
+    window.localStorage.setItem(THEME_KEY, isDark ? "dark" : "light");
+  }, [isDark]);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleMediaChange = (event: MediaQueryListEvent) => {
+      const saved = window.localStorage.getItem(THEME_KEY);
+      if (saved === "dark" || saved === "light") return;
+      setIsDark(event.matches);
+    };
+
+    media.addEventListener("change", handleMediaChange);
+    return () => media.removeEventListener("change", handleMediaChange);
+  }, []);
 
   const toggleTheme = () => {
     const nextIsDark = !isDark;
     setIsDark(nextIsDark);
-    document.documentElement.classList.toggle("dark", nextIsDark);
-    window.localStorage.setItem(THEME_KEY, nextIsDark ? "dark" : "light");
-    onChange?.(nextIsDark);
   };
 
   return (

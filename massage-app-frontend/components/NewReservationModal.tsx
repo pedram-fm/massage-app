@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import DatePicker from "react-multi-date-picker";
+import type { Value } from "react-multi-date-picker";
 import TimePicker from "react-multi-date-picker/plugins/time_picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
@@ -32,8 +33,8 @@ export function NewReservationModal({
   onClose: () => void;
 }) {
   const [medicalAnswers, setMedicalAnswers] = useState<Record<string, "yes" | "no" | "">>({});
-  const [visitDate, setVisitDate] = useState<unknown>(null);
-  const [birthDate, setBirthDate] = useState<unknown>(null);
+  const [visitDate, setVisitDate] = useState<Value>(null);
+  const [birthDate, setBirthDate] = useState<Value>(null);
 
   const setAnswer = (item: string, value: "yes" | "no") => {
     setMedicalAnswers((prev) => ({ ...prev, [item]: value }));

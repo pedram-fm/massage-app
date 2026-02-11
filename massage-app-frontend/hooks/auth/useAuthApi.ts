@@ -1,22 +1,35 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { getApiBaseUrl, readJsonSafe } from "@/lib/api";
+
+type ApiErrorShape = {
+    message?: string;
+    errors?: {
+        email?: string[];
+        phone?: string[];
+        username?: string[];
+    };
+};
+
+type AuthSuccessShape = {
+    access_token?: string;
+    token_type?: string;
+    user?: Record<string, unknown>;
+    code_debug?: string;
+    message?: string;
+};
+
+type RegisterPayload = Record<string, string | undefined>;
+type VerifyPayload = Record<string, string | undefined>;
+type ResendPayload = Record<string, string | undefined>;
 
 export function useAuthApi() {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const apiBaseUrl = useMemo(() => {
-        if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-            return process.env.NEXT_PUBLIC_API_BASE_URL;
-        }
-        if (typeof window !== "undefined") {
-            const { protocol, hostname } = window.location;
-            return `${protocol}//${hostname}:8000`;
-        }
-        return "http://localhost:8000";
-    }, []);
+    const apiBaseUrl = useMemo(() => getApiBaseUrl(), []);
     const router = useRouter();
 
-    const register = async (payload: Record<string, any>) => {
+    const register = async (payload: RegisterPayload) => {
         setIsSubmitting(true);
         try {
             const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
@@ -25,7 +38,7 @@ export function useAuthApi() {
                 body: JSON.stringify(payload),
             });
 
-            const data = await response.json().catch(() => ({}));
+            const data = await readJsonSafe<AuthSuccessShape & ApiErrorShape>(response);
 
             if (!response.ok) {
                 const message =
@@ -48,7 +61,7 @@ export function useAuthApi() {
         }
     };
 
-    const verify = async (endpoint: string, payload: Record<string, any>) => {
+    const verify = async (endpoint: string, payload: VerifyPayload) => {
         try {
             const response = await fetch(`${apiBaseUrl}${endpoint}`, {
                 method: "POST",
@@ -56,7 +69,7 @@ export function useAuthApi() {
                 body: JSON.stringify(payload),
             });
 
-            const data = await response.json().catch(() => ({}));
+            const data = await readJsonSafe<AuthSuccessShape & ApiErrorShape>(response);
 
             if (!response.ok) {
                 return { ok: false, message: data?.message || "کد نامعتبر است" };
@@ -79,7 +92,7 @@ export function useAuthApi() {
         }
     };
 
-    const resend = async (endpoint: string, payload: Record<string, any>) => {
+    const resend = async (endpoint: string, payload: ResendPayload) => {
         try {
             const response = await fetch(`${apiBaseUrl}${endpoint}`, {
                 method: "POST",
@@ -87,7 +100,7 @@ export function useAuthApi() {
                 body: JSON.stringify(payload),
             });
 
-            const data = await response.json().catch(() => ({}));
+            const data = await readJsonSafe<AuthSuccessShape & ApiErrorShape>(response);
 
             if (!response.ok) {
                 return { ok: false, message: data?.message || "ارسال مجدد ناموفق بود" };

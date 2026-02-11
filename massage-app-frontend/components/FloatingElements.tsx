@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion } from 'motion/react';
 
 interface FloatingElementsProps {
@@ -15,6 +16,17 @@ export function FloatingElements({ isDark }: FloatingElementsProps) {
     { size: 70, x: '90%', y: '40%', delay: 1, duration: 24 },
     { size: 40, x: '5%', y: '60%', delay: 3, duration: 26 },
   ];
+
+  const sparkles = useMemo(
+    () =>
+      Array.from({ length: 8 }, (_, index) => ({
+        left: `${(index * 17 + 11) % 100}%`,
+        top: `${(index * 23 + 7) % 100}%`,
+        duration: 3 + ((index * 7) % 3),
+        delay: (index * 0.6) % 5,
+      })),
+    [],
+  );
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -48,23 +60,23 @@ export function FloatingElements({ isDark }: FloatingElementsProps) {
       ))}
       
       {/* Decorative sparkles */}
-      {[...Array(8)].map((_, i) => (
+      {sparkles.map((sparkle, i) => (
         <motion.div
           key={`sparkle-${i}`}
           className={`absolute w-1 h-1 rounded-full ${
             isDark ? 'bg-amber-400/40' : 'bg-amber-500/60'
           }`}
           style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
+            left: sparkle.left,
+            top: sparkle.top,
           }}
           animate={{
             opacity: [0, 1, 0],
             scale: [0, 1.5, 0],
           }}
           transition={{
-            duration: 3 + Math.random() * 2,
-            delay: Math.random() * 5,
+            duration: sparkle.duration,
+            delay: sparkle.delay,
             repeat: Infinity,
             ease: 'easeInOut',
           }}
