@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, useAnimation } from "motion/react";
 
 const moods = [
@@ -16,7 +17,6 @@ const moods = [
 
 export function CloudCompanion() {
   const [index, setIndex] = useState(0);
-  const [mounted, setMounted] = useState(false);
   const [variant, setVariant] = useState("idle");
   const controls = useAnimation();
 
@@ -28,9 +28,6 @@ export function CloudCompanion() {
   const mood = useMemo(() => moods[index % moods.length], [index]);
 
   useEffect(() => {
-    setMounted(true);
-    controls.start({ opacity: 1 });
-
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       size.current = { width: rect.width, height: rect.height };
@@ -69,7 +66,7 @@ export function CloudCompanion() {
     shake: { x: [0, -5, 5, -5, 5, 0], transition: { duration: 0.4 } },
   };
 
-  const handleDrag = (event: any, info: any) => {
+  const updateSpotlightFromButton = () => {
     if (!spotlightRef.current || !buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
@@ -108,18 +105,20 @@ export function CloudCompanion() {
     controls.set({ opacity: 1 });
   }, [controls]);
 
-  if (!mounted) return null;
+  if (typeof document === "undefined") {
+    return null;
+  }
 
-  return (
+  return createPortal(
     <>
       <div
         ref={constraintsRef}
-        className="fixed inset-4 pointer-events-none z-0"
+        className="fixed inset-4 pointer-events-none z-[9996]"
       />
 
       <div
         ref={spotlightRef}
-        className="cloud-spotlight opacity-0"
+        className="cloud-spotlight z-[9997] opacity-0"
         style={{ "--spot-x": "0px", "--spot-y": "0px" } as React.CSSProperties}
       />
       <motion.button
@@ -131,9 +130,9 @@ export function CloudCompanion() {
           setTimeout(() => setVariant("idle"), 1000);
         }}
         onDoubleClick={handleReset}
-        className="cloud-lamp fixed z-40 flex items-center gap-3 rounded-full border border-[color:var(--surface-muted)] bg-[color:var(--card)]/90 px-4 py-3 shadow-lg backdrop-blur-md"
-        // Initial position bottom-right
-        initial={{ bottom: 24, right: 24, x: 0, y: 0, opacity: 1 }}
+        className="cloud-lamp fixed bottom-6 right-6 z-[9999] flex items-center gap-3 rounded-full border border-[color:var(--surface-muted)] bg-[color:var(--card)]/90 px-4 py-3 shadow-lg backdrop-blur-md"
+        // Keep transform animation separate from CSS positioning so placement is stable.
+        initial={{ x: 0, y: 0, opacity: 1 }}
         animate={controls}
         drag
         dragConstraints={constraintsRef}
@@ -143,9 +142,9 @@ export function CloudCompanion() {
           if (spotlightRef.current) spotlightRef.current.style.opacity = "1";
           setVariant("wiggle");
         }}
-        onDrag={handleDrag}
-        onDragEnd={(e, info) => {
-          handleDrag(e, info);
+        onDrag={updateSpotlightFromButton}
+        onDragEnd={() => {
+          updateSpotlightFromButton();
           setVariant("idle");
         }}
         whileHover={{ scale: 1.02 }}
@@ -176,5 +175,7 @@ export function CloudCompanion() {
         </div>
       </motion.button>
     </>
+    ,
+    document.body
   );
 }
