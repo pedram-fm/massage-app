@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { CloudCompanion } from "@/components/CloudCompanion";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,7 +15,6 @@ export default function RootLayout({
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <body className="antialiased">
         {children}
-        <CloudCompanion />
       </body>
     </html>
   );

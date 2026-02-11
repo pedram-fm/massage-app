@@ -15,6 +15,7 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DashboardModals } from "@/components/DashboardModals";
 import { NewReservationModal } from "@/components/NewReservationModal";
+import { CloudCompanion } from "@/components/CloudCompanion";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -188,6 +189,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       />
 
       <NewReservationModal open={openReservation} onClose={() => setOpenReservation(false)} />
+      <CloudCompanion />
     </div>
   );
 }
