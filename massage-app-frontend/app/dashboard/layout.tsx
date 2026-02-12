@@ -12,10 +12,10 @@ import {
   SlidersHorizontal,
   User,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { DashboardModals } from "@/components/DashboardModals";
-import { NewReservationModal } from "@/components/NewReservationModal";
-import { CloudCompanion } from "@/components/CloudCompanion";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { DashboardModals } from "@/components/admin/DashboardModals";
+import { NewReservationModal } from "@/components/admin/NewReservationModal";
+import { CloudCompanion } from "@/components/shared/CloudCompanion";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 

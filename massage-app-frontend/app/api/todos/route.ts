@@ -4,16 +4,25 @@ import path from 'path';
 
 const TODO_FILE = path.join(process.cwd(), 'TODO.md');
 
-interface Task {
+type TaskStatus = 'todo' | 'inprogress' | 'done';
+
+interface Subtask {
   id: string;
   title: string;
   completed: boolean;
+}
+
+interface Task {
+  id: string;
+  title: string;
+  status: TaskStatus;
   priority: string | null;
   estimate: string | null;
   files: string[];
   details: string | null;
   lineNumber: number;
   category: string;
+  subtasks?: Subtask[];
 }
 
 function parseTasks(content: string): Task[] {
@@ -38,16 +47,22 @@ function parseTasks(content: string): Task[] {
       if (currentTask) {
         tasks.push(currentTask as Task);
       }
+      
+      const completed = taskMatch[1] === 'x';
+      // Determine status from completion or from status marker in the task
+      let status: TaskStatus = completed ? 'done' : 'todo';
+      
       currentTask = {
         lineNumber: i + 1,
-        completed: taskMatch[1] === 'x',
+        status,
         id: taskMatch[2],
         title: taskMatch[3].trim(),
         priority: null,
         estimate: null,
         files: [],
         details: null,
-        category: currentCategory
+        category: currentCategory,
+        subtasks: []
       };
       continue;
     }
@@ -69,6 +84,11 @@ function parseTasks(content: string): Task[] {
 
       const detailsMatch = line.match(/Details:\s*(.+)/);
       if (detailsMatch) currentTask.details = detailsMatch[1].trim();
+
+      const statusMatch = line.match(/Status:\s*(todo|inprogress|done)/i);
+      if (statusMatch) {
+        currentTask.status = statusMatch[1].toLowerCase() as TaskStatus;
+      }
     }
   }
 
@@ -81,7 +101,7 @@ function parseTasks(content: string): Task[] {
 
 function getStats(tasks: Task[]) {
   const total = tasks.length;
-  const completed = tasks.filter(t => t.completed).length;
+  const completed = tasks.filter(t => t.status === 'done').length;
   const pending = total - completed;
   const percentage = total > 0 ? ((completed / total) * 100).toFixed(1) : '0';
 
@@ -93,11 +113,17 @@ function getStats(tasks: Task[]) {
   };
 
   const byCategory: Record<string, { total: number; completed: number }> = {};
+  
+  const byStatus: Record<TaskStatus, number> = {
+    todo: 0,
+    inprogress: 0,
+    done: 0
+  };
 
   tasks.forEach(task => {
     if (task.priority && byPriority[task.priority]) {
       byPriority[task.priority].total++;
-      if (task.completed) {
+      if (task.status === 'done') {
         byPriority[task.priority].completed++;
       }
     }
@@ -106,9 +132,11 @@ function getStats(tasks: Task[]) {
       byCategory[task.category] = { total: 0, completed: 0 };
     }
     byCategory[task.category].total++;
-    if (task.completed) {
+    if (task.status === 'done') {
       byCategory[task.category].completed++;
     }
+    
+    byStatus[task.status]++;
   });
 
   return {
@@ -117,7 +145,8 @@ function getStats(tasks: Task[]) {
     pending,
     percentage,
     byPriority,
-    byCategory
+    byCategory,
+    byStatus
   };
 }
 
@@ -139,10 +168,8 @@ export async function GET(request: NextRequest) {
       filteredTasks = filteredTasks.filter(t => t.priority === priority);
     }
 
-    if (status === 'completed') {
-      filteredTasks = filteredTasks.filter(t => t.completed);
-    } else if (status === 'pending') {
-      filteredTasks = filteredTasks.filter(t => !t.completed);
+    if (status) {
+      filteredTasks = filteredTasks.filter(t => t.status === status);
     }
 
     if (category) {
@@ -175,9 +202,9 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const { taskId, completed } = await request.json();
+    const { taskId, status } = await request.json();
 
-    if (!taskId || typeof completed !== 'boolean') {
+    if (!taskId || !status) {
       return NextResponse.json(
         { error: 'Invalid request body' },
         { status: 400 }
@@ -185,17 +212,45 @@ export async function PATCH(request: NextRequest) {
     }
 
     const content = fs.readFileSync(TODO_FILE, 'utf-8');
-    const checkChar = completed ? 'x' : ' ';
-    const regex = new RegExp(`^- \\[[ x]\\] \\*\\*${taskId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\*\\*:`, 'm');
-    
-    if (!regex.test(content)) {
+    const lines = content.split('\n');
+    let updated = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const taskMatch = lines[i].match(/^- \[([ x])\] \*\*(.+?)\*\*:/);
+      if (taskMatch && taskMatch[2] === taskId) {
+        const checkChar = (status === 'done') ? 'x' : ' ';
+        lines[i] = lines[i].replace(/^- \[([ x])\]/, `- [${checkChar}]`);
+        
+        // Add or update status line
+        let j = i + 1;
+        let statusLineFound = false;
+        while (j < lines.length && lines[j].match(/^\s+[-*]|^\s{2,}/)) {
+          if (lines[j].match(/Status:/i)) {
+            lines[j] = `  - Status: ${status}`;
+            statusLineFound = true;
+            break;
+          }
+          j++;
+        }
+        
+        if (!statusLineFound && j < lines.length) {
+          // Insert status line after priority/estimate/files if they exist
+          lines.splice(j, 0, `  - Status: ${status}`);
+        }
+        
+        updated = true;
+        break;
+      }
+    }
+
+    if (!updated) {
       return NextResponse.json(
         { error: 'Task not found' },
         { status: 404 }
       );
     }
 
-    const newContent = content.replace(regex, `- [${checkChar}] **${taskId}**:`);
+    const newContent = lines.join('\n');
     fs.writeFileSync(TODO_FILE, newContent, 'utf-8');
 
     const tasks = parseTasks(newContent);
@@ -210,6 +265,201 @@ export async function PATCH(request: NextRequest) {
     console.error('Error updating TODO file:', error);
     return NextResponse.json(
       { error: 'Failed to update TODO file' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const taskData = await request.json();
+    
+    if (!taskData.title) {
+      return NextResponse.json(
+        { error: 'Title is required' },
+        { status: 400 }
+      );
+    }
+
+    const content = fs.readFileSync(TODO_FILE, 'utf-8');
+    const lines = content.split('\n');
+    
+    // Generate a unique task ID
+    const taskId = `TASK-${Date.now()}`;
+    const checkChar = taskData.status === 'done' ? 'x' : ' ';
+    
+    // Find the end of file to append new task
+    let newTaskLines = [
+      '',
+      `- [${checkChar}] **${taskId}**: ${taskData.title}`,
+    ];
+    
+    if (taskData.priority) {
+      newTaskLines.push(`  - Priority: ${taskData.priority}`);
+    }
+    if (taskData.estimate) {
+      newTaskLines.push(`  - Estimate: ${taskData.estimate}`);
+    }
+    if (taskData.details) {
+      newTaskLines.push(`  - Details: ${taskData.details}`);
+    }
+    if (taskData.status) {
+      newTaskLines.push(`  - Status: ${taskData.status}`);
+    }
+    if (taskData.category) {
+      newTaskLines.push(`  - Category: ${taskData.category}`);
+    }
+    
+    const newContent = content + '\n' + newTaskLines.join('\n');
+    fs.writeFileSync(TODO_FILE, newContent, 'utf-8');
+
+    const tasks = parseTasks(newContent);
+    const stats = getStats(tasks);
+
+    return NextResponse.json({
+      success: true,
+      stats,
+      tasks
+    });
+  } catch (error) {
+    console.error('Error creating task:', error);
+    return NextResponse.json(
+      { error: 'Failed to create task' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const taskData = await request.json();
+    
+    if (!taskData.id || !taskData.title) {
+      return NextResponse.json(
+        { error: 'ID and title are required' },
+        { status: 400 }
+      );
+    }
+
+    const content = fs.readFileSync(TODO_FILE, 'utf-8');
+    const lines = content.split('\n');
+    let updated = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const taskMatch = lines[i].match(/^- \[([ x])\] \*\*(.+?)\*\*:/);
+      if (taskMatch && taskMatch[2] === taskData.id) {
+        const checkChar = (taskData.status === 'done') ? 'x' : ' ';
+        lines[i] = `- [${checkChar}] **${taskData.id}**: ${taskData.title}`;
+        
+        // Remove old task details
+        let j = i + 1;
+        while (j < lines.length && lines[j].match(/^\s+[-*]|^\s{2,}/)) {
+          lines.splice(j, 1);
+        }
+        
+        // Add updated task details
+        const detailLines = [];
+        if (taskData.priority) {
+          detailLines.push(`  - Priority: ${taskData.priority}`);
+        }
+        if (taskData.estimate) {
+          detailLines.push(`  - Estimate: ${taskData.estimate}`);
+        }
+        if (taskData.details) {
+          detailLines.push(`  - Details: ${taskData.details}`);
+        }
+        if (taskData.status) {
+          detailLines.push(`  - Status: ${taskData.status}`);
+        }
+        if (taskData.category) {
+          detailLines.push(`  - Category: ${taskData.category}`);
+        }
+        
+        lines.splice(i + 1, 0, ...detailLines);
+        updated = true;
+        break;
+      }
+    }
+
+    if (!updated) {
+      return NextResponse.json(
+        { error: 'Task not found' },
+        { status: 404 }
+      );
+    }
+
+    const newContent = lines.join('\n');
+    fs.writeFileSync(TODO_FILE, newContent, 'utf-8');
+
+    const tasks = parseTasks(newContent);
+    const stats = getStats(tasks);
+
+    return NextResponse.json({
+      success: true,
+      stats,
+      tasks
+    });
+  } catch (error) {
+    console.error('Error updating task:', error);
+    return NextResponse.json(
+      { error: 'Failed to update task' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { taskId } = await request.json();
+    
+    if (!taskId) {
+      return NextResponse.json(
+        { error: 'Task ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const content = fs.readFileSync(TODO_FILE, 'utf-8');
+    const lines = content.split('\n');
+    let deleted = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const taskMatch = lines[i].match(/^- \[([ x])\] \*\*(.+?)\*\*:/);
+      if (taskMatch && taskMatch[2] === taskId) {
+        lines.splice(i, 1);
+        
+        // Remove task details
+        while (i < lines.length && lines[i].match(/^\s+[-*]|^\s{2,}/)) {
+          lines.splice(i, 1);
+        }
+        
+        deleted = true;
+        break;
+      }
+    }
+
+    if (!deleted) {
+      return NextResponse.json(
+        { error: 'Task not found' },
+        { status: 404 }
+      );
+    }
+
+    const newContent = lines.join('\n');
+    fs.writeFileSync(TODO_FILE, newContent, 'utf-8');
+
+    const tasks = parseTasks(newContent);
+    const stats = getStats(tasks);
+
+    return NextResponse.json({
+      success: true,
+      stats,
+      tasks
+    });
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete task' },
       { status: 500 }
     );
   }

@@ -11,6 +11,7 @@
   - Files: `hooks/auth/useAuthApi.ts`, `app/auth/login/page.tsx`
   - Details: پیاده‌سازی server-side cookie management برای توکن‌های JWT
   
+  - Status: todo
 - [ ] **SEC-002**: پیاده‌سازی CSRF Protection
   - Priority: P0
   - Estimate: 3h
@@ -379,3 +380,4 @@
   - Files: `path/to/file.ts`
   - Details: توضیحات تکمیلی
 ```
+

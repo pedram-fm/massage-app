@@ -5,11 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { ForgotPassword } from "@/components/ForgotPassword";
-import { Register } from "@/components/Register";
-import { FloatingElements } from "@/components/FloatingElements";
-import { CloudCompanion } from "@/components/CloudCompanion";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { ForgotPassword } from "@/components/auth/ForgotPassword";
+import { Register } from "@/components/auth/Register";
+import { FloatingElements } from "@/components/shared/FloatingElements";
+import { CloudCompanion } from "@/components/shared/CloudCompanion";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { getApiBaseUrl } from "@/lib/api";
 import { toast, Toaster } from "sonner";
 
