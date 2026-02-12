@@ -43,9 +43,11 @@ class LoginAction
         $user->last_login_at = now();
         $this->userRepository->save($user);
 
+        $tokenData = $this->tokenService->createAccessToken($user);
+
         return [
             'user' => $user,
-            ...$this->tokenService->createAccessToken($user),
+            ...$tokenData,
         ];
     }
 }

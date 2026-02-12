@@ -19,6 +19,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'role_id',
         'f_name',
         'l_name',
         'username',
@@ -64,5 +65,69 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the role that the user belongs to
+     */
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * Check if user has a specific role
+     */
+    public function hasRole(string $roleName): bool
+    {
+        return $this->role && $this->role->name === $roleName;
+    }
+
+    /**
+     * Check if user has any of the given roles
+     */
+    public function hasAnyRole(array $roles): bool
+    {
+        return $this->role && in_array($this->role->name, $roles);
+    }
+
+    /**
+     * Check if user has a specific permission
+     */
+    public function hasPermission(string $permissionName): bool
+    {
+        return $this->role && $this->role->hasPermission($permissionName);
+    }
+
+    /**
+     * Check if user is an admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasRole(Role::ADMIN);
+    }
+
+    /**
+     * Check if user is a massage therapist (masseur or masseuse)
+     */
+    public function isMassageTherapist(): bool
+    {
+        return $this->hasAnyRole([Role::MASSEUR, Role::MASSEUSE]);
+    }
+
+    /**
+     * Check if user is a client
+     */
+    public function isClient(): bool
+    {
+        return $this->hasRole(Role::CLIENT);
+    }
+
+    /**
+     * Load role with permissions for API responses
+     */
+    public function loadRoleWithPermissions()
+    {
+        return $this->load('role.permissions');
     }
 }

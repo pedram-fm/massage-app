@@ -26,10 +26,37 @@ class TokenService
             $tokenResult = $user->createToken('auth');
         }
 
+        // Load role and permissions for the response
+        $user->loadRoleWithPermissions();
+
         return [
             'token_type' => 'Bearer',
             'access_token' => $tokenResult->accessToken,
             'expires_at' => optional($tokenResult->token->expires_at)->toDateTimeString(),
+            'user' => $this->getUserData($user),
+        ];
+    }
+
+    /**
+     * Get formatted user data with role and permissions
+     */
+    private function getUserData(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'f_name' => $user->f_name,
+            'l_name' => $user->l_name,
+            'username' => $user->username,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'bio' => $user->bio,
+            'avatar_url' => $user->avatar_url,
+            'role' => $user->role ? [
+                'id' => $user->role->id,
+                'name' => $user->role->name,
+                'display_name' => $user->role->display_name,
+            ] : null,
+            'permissions' => $user->role ? $user->role->permissions->pluck('name')->toArray() : [],
         ];
     }
 
