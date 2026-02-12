@@ -17,7 +17,7 @@ import {
 import { useUserManagement } from "@/hooks/admin/useUserManagement";
 import { UserFormModal } from "@/components/admin/UserFormModal";
 import { DeleteConfirmModal } from "@/components/admin/DeleteConfirmModal";
-import type { User } from "@/lib/services/userManagementService";
+import type { User, CreateUserDto, UpdateUserDto } from "@/lib/services/userManagementService";
 
 export default function UsersManagementPage() {
   const {
@@ -44,12 +44,12 @@ export default function UsersManagementPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const handleCreateUser = async (data: any) => {
-    const success = await createUser(data);
+  const handleCreateUser = async (data: CreateUserDto | UpdateUserDto) => {
+    const success = await createUser(data as CreateUserDto);
     return success;
   };
 
-  const handleUpdateUser = async (data: any) => {
+  const handleUpdateUser = async (data: CreateUserDto | UpdateUserDto) => {
     if (!selectedUser) return false;
     const success = await updateUser(selectedUser.id, data);
     return success;
@@ -81,16 +81,16 @@ export default function UsersManagementPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-[color:var(--brand)]">مدیریت کاربران</h1>
-          <p className="text-[color:var(--muted-text)] mt-1">مشاهده و مدیریت کاربران سامانه</p>
+          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[color:var(--brand)] to-purple-600 bg-clip-text text-transparent">مدیریت کاربران</h1>
+          <p className="text-sm md:text-base text-[color:var(--muted-text)] mt-1">مشاهده و مدیریت کاربران سامانه</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 rounded-lg bg-[color:var(--brand)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[color:var(--brand)] to-purple-600 px-5 py-2.5 text-sm font-semibold text-white hover:shadow-lg hover:scale-105 transition-all duration-200 w-full sm:w-auto justify-center"
         >
           <Plus className="h-4 w-4" />
           کاربر جدید
@@ -99,63 +99,75 @@ export default function UsersManagementPage() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-blue-100 dark:bg-blue-900/30 p-3">
-                <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <p className="text-sm text-[color:var(--muted-text)]">کل کاربران</p>
-                <p className="text-2xl font-bold">{stats.total_users}</p>
+        <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
+          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="rounded-xl bg-white/20 backdrop-blur-sm p-2 md:p-3">
+                  <Users className="h-5 w-5 md:h-6 md:w-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs md:text-sm text-blue-100 font-medium">کل کاربران</p>
+                  <p className="text-xl md:text-2xl font-bold text-white">{stats.total_users}</p>
+                </div>
               </div>
             </div>
+            <div className="absolute -right-4 -bottom-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
           </div>
 
-          <div className="rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-green-100 dark:bg-green-900/30 p-3">
-                <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-              <div>
-                <p className="text-sm text-[color:var(--muted-text)]">ایمیل تایید شده</p>
-                <p className="text-2xl font-bold">{stats.verified_email}</p>
+          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="rounded-xl bg-white/20 backdrop-blur-sm p-2 md:p-3">
+                  <UserCheck className="h-5 w-5 md:h-6 md:w-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs md:text-sm text-green-100 font-medium">ایمیل تایید شده</p>
+                  <p className="text-xl md:text-2xl font-bold text-white">{stats.verified_email}</p>
+                </div>
               </div>
             </div>
+            <div className="absolute -right-4 -bottom-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
           </div>
 
-          <div className="rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-purple-100 dark:bg-purple-900/30 p-3">
-                <Phone className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <p className="text-sm text-[color:var(--muted-text)]">تلفن تایید شده</p>
-                <p className="text-2xl font-bold">{stats.verified_phone}</p>
+          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="rounded-xl bg-white/20 backdrop-blur-sm p-2 md:p-3">
+                  <Phone className="h-5 w-5 md:h-6 md:w-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs md:text-sm text-purple-100 font-medium">تلفن تایید شده</p>
+                  <p className="text-xl md:text-2xl font-bold text-white">{stats.verified_phone}</p>
+                </div>
               </div>
             </div>
+            <div className="absolute -right-4 -bottom-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
           </div>
 
-          <div className="rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-orange-100 dark:bg-orange-900/30 p-3">
-                <Calendar className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-              </div>
-              <div>
-                <p className="text-sm text-[color:var(--muted-text)]">ورود هفته اخیر</p>
-                <p className="text-2xl font-bold">{stats.recent_logins}</p>
+          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="rounded-xl bg-white/20 backdrop-blur-sm p-2 md:p-3">
+                  <Calendar className="h-5 w-5 md:h-6 md:w-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs md:text-sm text-orange-100 font-medium">ورود هفته اخیر</p>
+                  <p className="text-xl md:text-2xl font-bold text-white">{stats.recent_logins}</p>
+                </div>
               </div>
             </div>
+            <div className="absolute -right-4 -bottom-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
           </div>
         </div>
       )}
 
       {/* Filters */}
-      <div className="rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="rounded-2xl border border-[color:var(--surface-muted)] bg-gradient-to-r from-[color:var(--card)] to-[color:var(--surface)] p-4 md:p-6 shadow-sm">
+        <div className="flex flex-col gap-3 md:gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[color:var(--muted-text)]" />
+              <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[color:var(--brand)]" />
               <input
                 type="text"
                 placeholder="جستجو بر اساس نام، ایمیل، تلفن..."
@@ -164,7 +176,7 @@ export default function UsersManagementPage() {
                   setSearch(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full rounded-lg border border-[color:var(--surface-muted)] bg-[color:var(--surface)] py-2 pr-10 pl-4 text-sm focus:border-[color:var(--brand)] focus:outline-none focus:ring-2 focus:ring-[color:var(--brand)] focus:ring-opacity-20"
+                className="w-full rounded-xl border-2 border-[color:var(--surface-muted)] bg-[color:var(--surface)] py-2.5 pr-10 pl-4 text-sm focus:border-[color:var(--brand)] focus:outline-none focus:ring-2 focus:ring-[color:var(--brand)]/20 transition-all"
               />
             </div>
           </div>
@@ -176,7 +188,7 @@ export default function UsersManagementPage() {
                 setRoleFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="rounded-lg border border-[color:var(--surface-muted)] bg-[color:var(--surface)] px-4 py-2 text-sm focus:border-[color:var(--brand)] focus:outline-none focus:ring-2 focus:ring-[color:var(--brand)] focus:ring-opacity-20"
+              className="flex-1 rounded-xl border-2 border-[color:var(--surface-muted)] bg-[color:var(--surface)] px-3 md:px-4 py-2.5 text-sm font-medium focus:border-[color:var(--brand)] focus:outline-none focus:ring-2 focus:ring-[color:var(--brand)]/20 transition-all"
             >
               <option value="">همه نقش‌ها</option>
               {roles.map((role) => (
@@ -188,10 +200,10 @@ export default function UsersManagementPage() {
 
             <button
               onClick={fetchUsers}
-              className="rounded-lg border border-[color:var(--surface-muted)] bg-[color:var(--surface)] p-2 hover:bg-[color:var(--surface-muted)] transition-colors"
+              className="rounded-xl border-2 border-[color:var(--brand)]/20 bg-gradient-to-br from-[color:var(--brand)]/10 to-purple-500/10 p-2.5 hover:from-[color:var(--brand)]/20 hover:to-purple-500/20 transition-all hover:scale-110"
               title="رفرش"
             >
-              <RefreshCw className="h-5 w-5" />
+              <RefreshCw className="h-5 w-5 text-[color:var(--brand)]" />
             </button>
           </div>
         </div>
@@ -214,40 +226,55 @@ export default function UsersManagementPage() {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[color:var(--surface-muted)] bg-[color:var(--surface)]">
-                  <th className="px-6 py-4 text-right text-xs font-medium text-[color:var(--muted-text)]">کاربر</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-[color:var(--muted-text)]">تماس</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-[color:var(--muted-text)]">نقش</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-[color:var(--muted-text)]">وضعیت</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-[color:var(--muted-text)]">تاریخ عضویت</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-[color:var(--muted-text)]">عملیات</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[color:var(--surface-muted)]">
-                {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-[color:var(--surface)] transition-colors">
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="font-medium">{user.f_name} {user.l_name}</p>
-                        {user.username && (
-                          <p className="text-sm text-[color:var(--muted-text)]">@{user.username}</p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        {user.email && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Mail className="h-4 w-4 text-[color:var(--muted-text)]" />
-                            <span>{user.email}</span>
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b-2 border-[color:var(--brand)]/20 bg-gradient-to-r from-[color:var(--brand)]/5 to-purple-500/5">
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-[color:var(--brand)] uppercase tracking-wider">کاربر</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-[color:var(--brand)] uppercase tracking-wider">تماس</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-[color:var(--brand)] uppercase tracking-wider">نقش</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-[color:var(--brand)] uppercase tracking-wider">وضعیت</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-[color:var(--brand)] uppercase tracking-wider">تاریخ عضویت</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-[color:var(--brand)] uppercase tracking-wider">عملیات</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[color:var(--surface-muted)]">
+                  {users.map((user) => (
+                    <tr key={user.id} className="hover:bg-gradient-to-l hover:from-[color:var(--brand)]/5 hover:to-transparent transition-all duration-150 border-r-4 border-transparent hover:border-[color:var(--brand)]">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[color:var(--brand)] to-purple-600 text-xs font-bold text-white shadow-md">
+                            {user.avatar_url ? (
+                              <img
+                                src={user.avatar_url}
+                                alt={`${user.f_name} ${user.l_name}`}
+                                className="h-full w-full rounded-full object-cover"
+                              />
+                            ) : (
+                              <span>{user.f_name?.[0]}{user.l_name?.[0]}</span>
+                            )}
                           </div>
-                        )}
-                        {user.phone && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Phone className="h-4 w-4 text-[color:var(--muted-text)]" />
+                          <div>
+                            <p className="font-semibold">{user.f_name} {user.l_name}</p>
+                            {user.username && (
+                              <p className="text-sm text-[color:var(--muted-text)]">@{user.username}</p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="space-y-1">
+                          {user.email && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Mail className="h-4 w-4 text-[color:var(--brand)]" />
+                              <span>{user.email}</span>
+                            </div>
+                          )}
+                          {user.phone && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Phone className="h-4 w-4 text-[color:var(--brand)]" />
                             <span>{user.phone}</span>
                           </div>
                         )}
@@ -269,12 +296,12 @@ export default function UsersManagementPage() {
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
                         {user.email_verified_at && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs text-green-700" title="ایمیل تایید شده">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 px-2.5 py-1 text-xs font-medium text-green-700 dark:text-green-300 shadow-sm" title="ایمیل تایید شده">
                             <Mail className="h-3 w-3" />
                           </span>
                         )}
                         {user.phone_verified_at && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-700" title="تلفن تایید شده">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 px-2.5 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 shadow-sm" title="تلفن تایید شده">
                             <Phone className="h-3 w-3" />
                           </span>
                         )}
@@ -290,7 +317,7 @@ export default function UsersManagementPage() {
                             setSelectedUser(user);
                             setShowEditModal(true);
                           }}
-                          className="rounded-lg p-2 text-blue-600 hover:bg-blue-50 transition-colors"
+                          className="rounded-lg p-2 text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-900/20 dark:hover:to-cyan-900/20 transition-all hover:scale-110"
                           title="ویرایش"
                         >
                           <Edit className="h-4 w-4" />
@@ -300,7 +327,7 @@ export default function UsersManagementPage() {
                             setSelectedUser(user);
                             setShowDeleteConfirm(true);
                           }}
-                          className="rounded-lg p-2 text-red-600 hover:bg-red-50 transition-colors"
+                          className="rounded-lg p-2 text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 dark:hover:from-red-900/20 dark:hover:to-orange-900/20 transition-all hover:scale-110"
                           title="حذف"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -312,26 +339,122 @@ export default function UsersManagementPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden divide-y divide-[color:var(--surface-muted)]">
+            {users.map((user) => (
+              <div key={user.id} className="p-4 hover:bg-gradient-to-l hover:from-[color:var(--brand)]/5 hover:to-transparent transition-all duration-200 border-r-4 border-transparent hover:border-[color:var(--brand)]">
+                <div className="space-y-3">
+                  {/* User Info */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[color:var(--brand)] to-purple-600 text-sm font-bold text-white shadow-md ring-2 ring-white dark:ring-gray-800">
+                        {user.avatar_url ? (
+                          <img
+                            src={user.avatar_url}
+                            alt={`${user.f_name} ${user.l_name}`}
+                            className="h-full w-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <span>{user.f_name?.[0]}{user.l_name?.[0]}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-base truncate">{user.f_name} {user.l_name}</p>
+                        {user.username && (
+                          <p className="text-sm text-[color:var(--muted-text)]">@{user.username}</p>
+                        )}
+                        <div className="mt-1">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                            user.role?.name === 'admin' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' :
+                            user.role?.name === 'masseur' || user.role?.name === 'masseuse' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                            'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                          }`}>
+                            {user.role?.display_name}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <button
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setShowEditModal(true);
+                        }}
+                        className="rounded-lg p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                        title="ویرایش"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setShowDeleteConfirm(true);
+                        }}
+                        className="rounded-lg p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        title="حذف"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Contact Info */}
+                  <div className="bg-[color:var(--surface)] rounded-lg p-3 space-y-1.5">
+                    {user.email && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="h-4 w-4 text-[color:var(--brand)] shrink-0" />
+                        <span className="truncate flex-1">{user.email}</span>
+                        {user.email_verified_at && (
+                          <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2 py-0.5 text-xs text-green-700 dark:text-green-300 shrink-0">
+                            تایید
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {user.phone && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="h-4 w-4 text-[color:var(--brand)] shrink-0" />
+                        <span className="truncate flex-1">{user.phone}</span>
+                        {user.phone_verified_at && (
+                          <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300 shrink-0">
+                            تایید
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Date */}
+                  <div className="flex items-center gap-2 text-xs text-[color:var(--muted-text)]">
+                    <Calendar className="h-3 w-3" />
+                    <span>عضویت: {user.created_at ? new Date(user.created_at).toLocaleDateString("fa-IR") : "-"}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          </>
         )}
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-[color:var(--surface-muted)] px-6 py-4">
-            <p className="text-sm text-[color:var(--muted-text)]">
-              صفحه {currentPage} از {totalPages}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[color:var(--surface-muted)] bg-gradient-to-r from-[color:var(--surface)]/50 to-transparent px-4 md:px-6 py-4">
+            <p className="text-sm font-medium text-[color:var(--muted-text)]">
+              صفحه <span className="text-[color:var(--brand)] font-bold">{currentPage}</span> از <span className="text-[color:var(--brand)] font-bold">{totalPages}</span>
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="rounded-lg border border-[color:var(--surface-muted)] px-3 py-1 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[color:var(--surface-muted)] transition-colors"
+                className="rounded-lg border-2 border-[color:var(--surface-muted)] px-4 py-2 text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gradient-to-r hover:from-[color:var(--brand)] hover:to-purple-600 hover:text-white hover:border-transparent transition-all hover:scale-105 disabled:hover:scale-100"
               >
                 قبلی
               </button>
               <button
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="rounded-lg border border-[color:var(--surface-muted)] px-3 py-1 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[color:var(--surface-muted)] transition-colors"
+                className="rounded-lg border-2 border-[color:var(--surface-muted)] px-4 py-2 text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gradient-to-r hover:from-[color:var(--brand)] hover:to-purple-600 hover:text-white hover:border-transparent transition-all hover:scale-105 disabled:hover:scale-100"
               >
                 بعدی
               </button>

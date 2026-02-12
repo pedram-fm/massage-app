@@ -283,3 +283,24 @@ html {
   background: radial-gradient(circle at 40% 40%, #f1f4f8 0%, #dfe5ef 70%);
   opacity: 0.85;
 }
+
+/* Modal Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

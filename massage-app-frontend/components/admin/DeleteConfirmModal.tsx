@@ -20,17 +20,19 @@ export function DeleteConfirmModal({ isOpen, onClose, onConfirm, user }: DeleteC
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-200"
       onClick={onClose}
+      style={{ animation: 'fadeIn 0.2s ease-out' }}
     >
       <div
-        className="w-full max-w-md rounded-xl bg-[color:var(--card)] shadow-2xl"
+        className="w-full max-w-md rounded-2xl bg-[color:var(--card)] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
+        style={{ animation: 'scaleIn 0.3s ease-out' }}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 border-b border-[color:var(--surface-muted)] p-6">
-          <div className="rounded-full bg-red-100 p-3">
-            <AlertTriangle className="h-6 w-6 text-red-600" />
+        <div className="relative flex items-center gap-3 border-b border-[color:var(--surface-muted)] p-6 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30">
+          <div className="rounded-full bg-gradient-to-br from-red-500 to-orange-600 p-3 shadow-lg">
+            <AlertTriangle className="h-6 w-6 text-white" />
           </div>
           <div className="flex-1">
             <h2 className="text-lg font-bold">حذف کاربر</h2>
@@ -38,7 +40,8 @@ export function DeleteConfirmModal({ isOpen, onClose, onConfirm, user }: DeleteC
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-2 text-[color:var(--muted-text)] transition-colors hover:bg-[color:var(--surface-muted)]"
+            className="rounded-full p-2 text-[color:var(--muted-text)] transition-all hover:bg-[color:var(--surface-muted)] hover:text-[color:var(--foreground)] hover:rotate-90"
+            title="بستن"
           >
             <X className="h-5 w-5" />
           </button>
@@ -66,16 +69,16 @@ export function DeleteConfirmModal({ isOpen, onClose, onConfirm, user }: DeleteC
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 border-t border-[color:var(--surface-muted)] p-6">
+        <div className="flex flex-col sm:flex-row gap-3 border-t border-[color:var(--surface-muted)] p-6">
           <button
             onClick={onClose}
-            className="flex-1 rounded-lg border border-[color:var(--surface-muted)] px-4 py-2 text-sm font-medium transition-colors hover:bg-[color:var(--surface-muted)]"
+            className="order-2 sm:order-1 flex-1 rounded-lg border border-[color:var(--surface-muted)] px-4 py-2.5 text-sm font-medium transition-all hover:bg-[color:var(--surface-muted)] hover:scale-105"
           >
             انصراف
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+            className="order-1 sm:order-2 flex-1 rounded-lg bg-gradient-to-r from-red-600 to-orange-600 px-4 py-2.5 text-sm font-medium text-white transition-all hover:shadow-lg hover:scale-105"
           >
             حذف کاربر
           </button>
