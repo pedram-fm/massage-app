@@ -1,357 +1,294 @@
-# 💆 Massage App - اپلیکیشن رزرو ماساژ
+# 💆 Massage App - Appointment Booking Platform
 
-> پلتفرم جامع مدیریت و رزرو خدمات ماساژ درمانی
+> Modern full-stack platform for massage therapy service booking and management
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.1-black)](https://nextjs.org/)
 [![Laravel](https://img.shields.io/badge/Laravel-11.x-red)](https://laravel.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
 [![PHP](https://img.shields.io/badge/PHP-8.2-purple)](https://www.php.net/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
 
-## 🚀 شروع سریع
+---
 
-### پیش‌نیازها
+## 🚀 Quick Start
 
-```bash
-Node.js >= 20.x
-npm >= 10.x
-PHP >= 8.2
-Composer >= 2.x
-Docker & Docker Compose (اختیاری)
-```
-
-### نصب و راه‌اندازی
-
-#### 1️⃣ Clone و Setup
+### Using Docker (Recommended)
 
 ```bash
 # Clone repository
 git clone <repository-url>
 cd massage-app
 
-# کپی environment variables
-cp .env.example .env
-```
-
-#### 2️⃣ Frontend Setup
-
-```bash
-cd massage-app-frontend
-
-# نصب dependencies
-npm install
-
-# کپی env file
-cp .env.example .env.local
-
-# اجرای development server
-npm run dev
-```
-
-Frontend در `http://localhost:3000` در دسترس خواهد بود.
-
-#### 3️⃣ Backend Setup
-
-```bash
-cd massage-app-backend
-
-# نصب dependencies
-composer install
-
-# کپی env file
-cp .env.example .env
-
-# Generate key
-php artisan key:generate
-
-# Migration و seed
-php artisan migrate --seed
-
-# اجرای server
-php artisan serve
-```
-
-Backend API در `http://localhost:8000` در دسترس خواهد بود.
-
-#### 4️⃣ Docker (روش جایگزین)
-
-```bash
-# راه‌اندازی تمام سرویس‌ها
+# Start all services
 docker-compose up -d
 
-# مشاهده logs
-docker-compose logs -f
+# Initialize backend
+docker-compose exec laravel_api php artisan migrate
+docker-compose exec laravel_api php artisan passport:install --force
+
+# Access services
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8000
+# Mailpit: http://localhost:8025
 ```
 
----
+### Manual Setup
 
-## 📋 مدیریت تسک‌ها (TODO Management)
+#### Prerequisites
+- Node.js >= 20.x
+- PHP >= 8.2
+- PostgreSQL >= 16
+- Composer >= 2.6
 
-این پروژه دارای یک سیستم مدیریت TODO پیشرفته است که به **سه روش** قابل استفاده است:
-
-### 🌐 روش 1: رابط وب (Web UI) - پیشنهادی ⭐
-
-یک داشبورد کامل و تعاملی برای مدیریت تسک‌ها:
-
+#### Backend
 ```bash
-# اجرای frontend
+cd massage-app-backend
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan passport:install
+php artisan serve  # http://localhost:8000
+```
+
+#### Frontend
+```bash
 cd massage-app-frontend
-npm run dev
-
-# سپس مراجعه به:
-http://localhost:3000/todos
-```
-
-**قابلیت‌ها:**
-- ✅ مشاهده آمار و پیشرفت به صورت real-time
-- ✅ فیلتر بر اساس اولویت، وضعیت، و دسته‌بندی
-- ✅ جستجوی سریع در تسک‌ها
-- ✅ Complete/Uncomplete تسک‌ها با یک کلیک
-- ✅ UI زیبا و responsive با dark mode support
-
-### 📂 روش 2: مدیریت دستی
-
-- **[massage-app-frontend/TODO.md](massage-app-frontend/TODO.md)** - لیست کامل تمام تسک‌ها
-- **[DEVELOPMENT.md](DEVELOPMENT.md)** - راهنمای کامل توسعه
-- **[scripts/manage-todos.js](scripts/manage-todos.js)** - اسکریپت مدیریت خودکار
-
-### � روش 3: خط فرمان (CLI)
-
-```bash
-# نمایش آمار کلی
-npm run todo:stats
-
-# لیست تسک‌های باز
-npm run todo:list
-
-# لیست تسک‌های انجام شده
-npm run todo:completed
-
-# تسک‌های فوری (P0)
-npm run todo:p0
-
-# تسک‌های با اولویت بالا (P1)
-npm run todo:p1
-
-# راهنمای کامل
-npm run todo:help
-```
-
-### 📊 مثال خروجی
-
-```bash
-$ npm run todo:stats
-
-📊 آمار کلی پروژه
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  کل تسک‌ها:        54
-  ✅ انجام شده:     1
-  ⏳ در انتظار:     53
-  📈 پیشرفت:        1.9%
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🎯 آمار بر اساس اولویت:
-
-  P0: 0/8 (0%)    ← فوری
-  P1: 0/21 (0%)   ← بالا
-  P2: 0/23 (0%)   ← متوسط
-  P3: 0/1 (0%)    ← پایین
-```
-
-### ✅ مارک کردن تسک به عنوان انجام شده
-
-```bash
-# با استفاده از اسکریپت
-node scripts/manage-todos.js done SEC-001
-
-# یا به صورت دستی در TODO.md
-- [x] **SEC-001**: توضیحات تسک
-```
-
-### 🔍 جستجو در تسک‌ها
-
-```bash
-# جستجوی کلمه کلیدی
-node scripts/manage-todos.js search "authentication"
-
-# مثال خروجی:
-🔍 نتایج جستجو برای "authentication" (3 مورد):
-
-  ⏳ [FUNC-001] Refresh Token Logic
-     Line: 234 | Priority: P0
-
-  ⏳ [ARCH-003] Global State Management با Zustand
-     Line: 156 | Priority: P1
+npm install
+cp .env.example .env.local
+npm run dev  # http://localhost:3000
 ```
 
 ---
 
-## 🧩 VSCode Integration
+## 📚 Documentation
 
-### Extension های پیشنهادی
+**Complete documentation is available in the [`docs/`](docs/) directory.**
 
-با باز کردن پروژه در VSCode، extension های زیر به صورت خودکار پیشنهاد می‌شوند:
-
-- ✅ **Todo Tree** - نمایش TODO ها در sidebar
-- ✅ **ESLint** - Linting
-- ✅ **Prettier** - Formatting
-- ✅ **Tailwind CSS IntelliSense** - Autocomplete برای Tailwind
-- ✅ **GitLens** - Git integration
-
-### تنظیمات خودکار
-
-فایل [.vscode/settings.json](.vscode/settings.json) شامل:
-- Auto-formatting در save
-- TODO highlighting با رنگ‌های مخصوص
-- Tailwind IntelliSense
-- TypeScript configuration
+| Document | Description |
+|----------|-------------|
+| [**Architecture**](docs/ARCHITECTURE.md) | Complete system architecture and design |
+| [**Backend Setup**](docs/backend/SETUP.md) | Laravel installation and configuration |
+| [**Backend API**](docs/backend/API.md) | RESTful API endpoints and examples |
+| [**Frontend Guide**](docs/frontend/README.md) | Next.js development guide |
+| [**Frontend Structure**](docs/frontend/STRUCTURE.md) | Project structure and patterns |
+| [**Docker Deployment**](docs/deployment/DOCKER.md) | Container orchestration guide |
+| [**Development Guide**](docs/development/GUIDE.md) | Development workflow |
 
 ---
 
-## 📁 ساختار پروژه
+## 🎯 Key Features
+
+### For Users
+- 🔐 **Secure Authentication**: OAuth2 with JWT tokens
+- 📅 **Easy Booking**: Real-time appointment scheduling
+- 👤 **Profile Management**: Personal information and history
+- 📧 **Email Notifications**: Booking confirmations and reminders
+- 🌙 **Dark Mode**: Comfortable viewing experience
+
+### For Administrators
+- 📊 **Admin Dashboard**: Complete management interface
+- 📋 **Kanban Board**: Task management with drag-and-drop
+- 📈 **Live Logs**: Real-time application monitoring
+- 🎯 **Appointment Control**: Manage bookings and services
+- 🌐 **RTL Support**: Persian language interface
+
+---
+
+## 🏗️ Technology Stack
+
+### Frontend
+- **Next.js 16** - React framework with App Router
+- **TypeScript** - Type-safe development
+- **Tailwind CSS** - Utility-first styling
+- **Framer Motion** - Smooth animations
+- **@dnd-kit** - Drag-and-drop functionality
+
+### Backend
+- **Laravel 11** - PHP framework
+- **PostgreSQL 16** - Relational database
+- **Laravel Passport** - OAuth2 authentication
+- **PHP 8.2** - Modern PHP features
+
+### Infrastructure
+- **Docker** - Containerization
+- **Nginx** - Web server
+- **Mailpit** - Email testing
+
+---
+
+## 📂 Project Structure
 
 ```
 massage-app/
-├── 📄 TODO.md                     # لیست تمام تسک‌ها
-├── 📘 DEVELOPMENT.md              # راهنمای توسعه
-├── 🐳 docker-compose.yml          # Docker configuration
-├── 📦 package.json                # Workspace scripts
+├── docs/                          # 📚 Complete documentation
+│   ├── ARCHITECTURE.md            # System architecture
+│   ├── backend/                   # Backend docs
+│   ├── frontend/                  # Frontend docs
+│   ├── deployment/                # Deployment guides
+│   └── development/               # Development guides
 │
-├── 🎨 massage-app-frontend/       # Next.js Frontend
-│   ├── app/                       # App Router
-│   ├── components/                # React Components
-│   ├── hooks/                     # Custom Hooks
-│   ├── lib/                       # Utilities
-│   └── public/                    # Static Assets
+├── massage-app-backend/           # 🔧 Laravel Backend
+│   ├── app/                       # Application code
+│   ├── config/                    # Configuration
+│   ├── database/                  # Migrations & seeders
+│   └── routes/                    # API routes
 │
-├── ⚙️ massage-app-backend/        # Laravel Backend
-│   ├── app/                       # Application Code
-│   ├── database/                  # Migrations & Seeds
-│   ├── routes/                    # API Routes
-│   └── tests/                     # Tests
+├── massage-app-frontend/          # 🎨 Next.js Frontend
+│   ├── app/                       # App Router pages
+│   │   ├── admin/                 # Admin panel
+│   │   ├── api/                   # API routes
+│   │   ├── auth/                  # Authentication
+│   │   └── dashboard/             # User dashboard
+│   ├── components/                # React components
+│   └── hooks/                     # Custom hooks
 │
-├── 🔧 scripts/                    # Automation Scripts
-│   └── manage-todos.js            # TODO Management
+├── scripts/                       # 🛠️ Utility scripts
+│   └── manage-todos.js            # TODO management
 │
-└── 📝 .vscode/                    # VSCode Configuration
-    ├── settings.json              # Editor Settings
-    └── extensions.json            # Recommended Extensions
+└── docker-compose.yml             # 🐳 Docker orchestration
 ```
 
 ---
 
-## 🎯 اولویت‌های توسعه
+## 🔧 Development
 
-### 🔴 فوری (این هفته)
+### TODO Management
 
-1. **امنیت**: جایگزینی localStorage با httpOnly cookies
-2. **Route Protection**: پیاده‌سازی Middleware
-3. **Environment Variables**: مستندسازی و setup
-4. **Error Handling**: بهبود پیام‌های خطا
+This project includes a powerful Kanban-style task management system:
 
-[مشاهده تسک‌های P0](TODO.md#-فوری---امنیت-critical-security)
+```bash
+# Web UI (Recommended)
+npm run dev
+# Visit: http://localhost:3000/admin/todos
 
-### 🟡 اولویت بالا (این ماه)
+# CLI
+node scripts/manage-todos.js stats
+node scripts/manage-todos.js view
+```
 
-1. **React Query**: پیاده‌سازی برای data fetching
-2. **State Management**: استفاده از Zustand
-3. **Accessibility**: بهبود A11Y
-4. **Type Safety**: تقویت TypeScript
+### Common Commands
 
-[مشاهده تسک‌های P1](TODO.md#-معماری-و-کد-architecture--code-quality)
+```bash
+# Backend
+php artisan migrate              # Run migrations
+php artisan test                 # Run tests
+php artisan cache:clear          # Clear cache
+
+# Frontend
+npm run dev                      # Development server
+npm run build                    # Production build
+npm run lint                     # Lint code
+
+# Docker
+docker-compose up -d             # Start services
+docker-compose logs -f           # View logs
+docker-compose down              # Stop services
+```
 
 ---
 
 ## 🧪 Testing
 
+### Backend Tests
 ```bash
-# Frontend Tests
-cd massage-app-frontend
-npm test
-
-# Backend Tests
 cd massage-app-backend
 php artisan test
-
-# E2E Tests (در آینده)
-npm run test:e2e
+php artisan test --coverage
 ```
 
----
-
-## 🚀 Deployment
-
-### Frontend (Vercel)
-
+### Frontend Tests
 ```bash
 cd massage-app-frontend
-vercel deploy
+npm run test
+npm run test:coverage
 ```
 
-### Backend (Production)
+---
+
+## 🚢 Deployment
+
+### Production Build
 
 ```bash
-cd massage-app-backend
-composer install --optimize-autoloader --no-dev
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+# Build all services
+docker-compose -f docker-compose.prod.yml build
+
+# Deploy
+docker-compose -f docker-compose.prod.yml up -d
+
+# Run migrations
+docker-compose exec laravel_api php artisan migrate --force
 ```
 
----
-
-## 📚 مستندات
-
-- 📘 [راهنمای توسعه کامل](DEVELOPMENT.md)
-- 📋 [لیست TODO](TODO.md)
-- 🔧 [API Documentation](docs/API.md) _(در حال تکمیل)_
-- 🏗️ [Architecture](docs/ARCHITECTURE.md) _(در حال تکمیل)_
+For detailed deployment instructions, see [Docker Deployment Guide](docs/deployment/DOCKER.md).
 
 ---
 
-## 🤝 مشارکت
+## 📊 Architecture Overview
 
-برای مشارکت در پروژه:
+```
+┌─────────────┐         ┌─────────────┐         ┌──────────────┐
+│   Frontend  │◄───────►│  Backend    │◄───────►│  PostgreSQL  │
+│  Next.js    │  REST   │  Laravel    │  Query  │   Database   │
+│  Port 3000  │   API   │  Port 8000  │         │   Port 5432  │
+└─────────────┘         └─────────────┘         └──────────────┘
+                              │
+                              ▼
+                        ┌─────────────┐
+                        │   Mailpit   │
+                        │   SMTP      │
+                        │  Port 1025  │
+                        └─────────────┘
+```
 
-1. Fork کنید
-2. Branch جدید بسازید: `git checkout -b feature/my-feature`
-3. Commit کنید: `git commit -m 'feat: add new feature'`
-4. Push کنید: `git push origin feature/my-feature`
-5. Pull Request ایجاد کنید
-
-[راهنمای مشارکت کامل](DEVELOPMENT.md#-git-workflow)
-
----
-
-## 📊 وضعیت پروژه
-
-- ✅ **Frontend**: در حال توسعه فعال
-- ✅ **Backend**: در حال توسعه فعال
-- 🚧 **Testing**: در دست تکمیل
-- 📝 **Documentation**: در حال نگارش
-
-**پیشرفت کلی**: ~2% (1/54 تسک انجام شده)
+For complete architecture details, see [Architecture Documentation](docs/ARCHITECTURE.md).
 
 ---
 
-## 📞 پشتیبانی
+## 🤝 Contributing
 
-- 🐛 **Bug Reports**: [GitHub Issues](link)
-- 💬 **Discussions**: [GitHub Discussions](link)
-- 📧 **Email**: dev@example.com
+We welcome contributions! Please follow these steps:
 
----
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📜 License
-
-این پروژه تحت مجوز MIT منتشر شده است - [LICENSE](LICENSE) را برای جزئیات مشاهده کنید.
-
----
-
-## ⭐ ستاره بدید!
-
-اگر این پروژه براتون مفید بود، لطفاً یک ⭐ بدید!
+See [Development Guide](docs/development/GUIDE.md) for more details.
 
 ---
 
-**ساخته شده با ❤️ توسط تیم Massage App**
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+## 📞 Support
+
+- **Documentation**: [docs/](docs/)
+- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
+- **Email**: support@massage-app.com
+
+---
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/) - React framework
+- [Laravel](https://laravel.com/) - PHP framework
+- [PostgreSQL](https://www.postgresql.org/) - Database
+- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
+- [Docker](https://www.docker.com/) - Containerization
+
+---
+
+**Version**: 1.0.0  
+**Last Updated**: February 12, 2026  
+**Status**: Active Development
+
+---
+
+**Made with ❤️ by the Massage App Team**
