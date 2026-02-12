@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { OTPModal } from "./OTPModal";
 import { toast } from "sonner";
+import { API_CONFIG } from "@/lib/config/constants";
 
 interface ForgotPasswordProps {
   onBack: () => void;
@@ -23,16 +24,7 @@ export function ForgotPassword({ onBack, isDark }: ForgotPasswordProps) {
   const [passwordError, setPasswordError] = useState("");
   const [confirmError, setConfirmError] = useState("");
   const [isResetting, setIsResetting] = useState(false);
-  const apiBaseUrl = useMemo(() => {
-    if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-      return process.env.NEXT_PUBLIC_API_BASE_URL;
-    }
-    if (typeof window !== "undefined") {
-      const { protocol, hostname } = window.location;
-      return `${protocol}//${hostname}:8000`;
-    }
-    return "http://localhost:8000";
-  }, []);
+  const apiBaseUrl = API_CONFIG.BASE_URL;
 
   const resetFlow = () => {
     setEmail("");
@@ -87,8 +79,7 @@ export function ForgotPassword({ onBack, isDark }: ForgotPasswordProps) {
       }
 
       setShowOTPModal(true);
-    } catch (error) {
-      console.error("Forgot password error:", error);
+    } catch {
       toast.error("خطا در اتصال به سرور");
     } finally {
       setIsSubmitting(false);
@@ -184,8 +175,7 @@ export function ForgotPassword({ onBack, isDark }: ForgotPasswordProps) {
       toast.success("رمز عبور با موفقیت تغییر کرد. لطفا وارد شوید.");
       resetFlow();
       onBack();
-    } catch (error) {
-      console.error("Reset password error:", error);
+    } catch {
       toast.error("خطا در اتصال به سرور");
     } finally {
       setIsResetting(false);

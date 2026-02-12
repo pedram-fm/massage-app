@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { toast } from "sonner";
 import {
   userManagementService,
   type User,
@@ -8,6 +7,9 @@ import {
   type CreateUserDto,
   type UpdateUserDto,
 } from "@/lib/services/userManagementService";
+import { errorHandler } from "@/lib/utils/errorHandler";
+import { PAGINATION_CONFIG } from "@/lib/config/constants";
+import { toast } from "sonner";
 
 /**
  * Custom Hook for User Management
@@ -31,7 +33,7 @@ export function useUserManagement() {
     try {
       const data = await userManagementService.getUsers({
         page: currentPage,
-        per_page: 15,
+        per_page: PAGINATION_CONFIG.DEFAULT_PER_PAGE,
         search: search || undefined,
         role: roleFilter || undefined,
       });
@@ -40,8 +42,7 @@ export function useUserManagement() {
       setCurrentPage(data.current_page);
       setTotalPages(data.last_page);
     } catch (error) {
-      toast.error("خطا در دریافت اطلاعات کاربران");
-      console.error(error);
+      errorHandler.handle(error, 'FetchUsers', 'خطا در دریافت اطلاعات کاربران');
     } finally {
       setLoading(false);
     }
@@ -54,8 +55,16 @@ export function useUserManagement() {
     try {
       const data = await userManagementService.getStats();
       setStats(data);
-    } catch (error) {
-      console.error("Failed to fetch stats:", error);
+    } catch (error: any) {
+      errorHandler.logError(error, 'FetchStats');
+      // Set empty stats to prevent UI issues
+      setStats({
+        total_users: 0,
+        by_role: [],
+        verified_email: 0,
+        verified_phone: 0,
+        recent_logins: 0,
+      });
     }
   }, []);
 
@@ -66,8 +75,10 @@ export function useUserManagement() {
     try {
       const data = await userManagementService.getRoles();
       setRoles(data);
-    } catch (error) {
-      console.error("Failed to fetch roles:", error);
+    } catch (error: any) {
+      errorHandler.logError(error, 'FetchRoles');
+      // Set empty roles to prevent UI issues
+      setRoles([]);
     }
   }, []);
 
@@ -81,8 +92,8 @@ export function useUserManagement() {
       await fetchUsers();
       await fetchStats();
       return true;
-    } catch (error: any) {
-      toast.error(error.message || "خطا در ایجاد کاربر");
+    } catch (error) {
+      errorHandler.handle(error, 'CreateUser', 'خطا در ایجاد کاربر');
       return false;
     }
   };
@@ -96,8 +107,8 @@ export function useUserManagement() {
       toast.success("کاربر با موفقیت به‌روزرسانی شد");
       await fetchUsers();
       return true;
-    } catch (error: any) {
-      toast.error(error.message || "خطا در به‌روزرسانی کاربر");
+    } catch (error) {
+      errorHandler.handle(error, 'UpdateUser', 'خطا در به‌روزرسانی کاربر');
       return false;
     }
   };
@@ -112,8 +123,8 @@ export function useUserManagement() {
       await fetchUsers();
       await fetchStats();
       return true;
-    } catch (error: any) {
-      toast.error(error.message || "خطا در حذف کاربر");
+    } catch (error) {
+      errorHandler.handle(error, 'DeleteUser', 'خطا در حذف کاربر');
       return false;
     }
   };
@@ -128,8 +139,8 @@ export function useUserManagement() {
       await fetchUsers();
       await fetchStats();
       return true;
-    } catch (error: any) {
-      toast.error(error.message || "خطا در تغییر نقش");
+    } catch (error) {
+      errorHandler.handle(error, 'ChangeRole', 'خطا در تغییر نقش');
       return false;
     }
   };

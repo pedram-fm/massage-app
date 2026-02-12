@@ -1,6 +1,8 @@
 "use client";
 
 import { useAuth } from "@/hooks/auth/useAuth";
+import * as tokenManager from "@/lib/auth/tokenManager";
+import { ROUTES } from "@/lib/navigation/routes";
 import { 
   Bell, 
   Search, 
@@ -20,11 +22,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuShortcut
 } from "@/components/ui/dropdown-menu";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
 import { ProfileSettingsModal } from "./ProfileSettingsModal";
 
 type AdminHeaderProps = {
@@ -37,10 +34,8 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("auth_user");
-    localStorage.removeItem("token_type");
-    window.location.href = "/auth/login";
+    tokenManager.clearAuth();
+    window.location.href = ROUTES.LOGIN;
   };
 
   return (
@@ -85,14 +80,21 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
             {/* User Profile Dropdown */}
             <DropdownMenu dir="rtl">
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 rounded-full border border-[color:var(--surface-muted)] bg-[color:var(--surface)] pl-4 pr-1 py-1 hover:bg-[color:var(--surface-muted)] transition-all outline-none focus:ring-2 focus:ring-[color:var(--brand)] focus:ring-offset-2">
-                  <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
-                    <AvatarImage src={user?.avatar_url} alt={user?.f_name || "User"} />
-                    <AvatarFallback className="bg-[color:var(--brand)] text-white">
-                      {user?.f_name?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="hidden md:flex flex-col items-start gap-0.5 text-right mr-2">
+                <button className="flex items-center gap-2 md:gap-3 rounded-full border border-[color:var(--surface-muted)] bg-[color:var(--surface)] pl-2 md:pl-4 pr-1 py-1 hover:bg-[color:var(--surface-muted)] transition-all outline-none focus:ring-2 focus:ring-[color:var(--brand)] focus:ring-offset-2">
+                  <div className="relative h-8 w-8 shrink-0">
+                    {user?.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={`${user?.f_name} ${user?.l_name}`}
+                        className="h-full w-full rounded-full object-cover border-2 border-white shadow-sm"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[color:var(--brand)] to-purple-600 text-xs font-bold text-white border-2 border-white shadow-sm">
+                        {user?.f_name?.[0]}{user?.l_name?.[0]}
+                      </div>
+                    )}
+                  </div>
+                  <div className="hidden lg:flex flex-col items-start gap-0.5 text-right mr-2">
                     <span className="text-sm font-semibold text-[color:var(--foreground)] truncate max-w-[100px]">
                       {user?.f_name} {user?.l_name}
                     </span>
@@ -103,15 +105,6 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user?.f_name} {user?.l_name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user?.email || user?.phone}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem 
                     className="cursor-pointer"

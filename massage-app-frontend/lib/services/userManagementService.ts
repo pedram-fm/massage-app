@@ -1,4 +1,4 @@
-import { getApiBaseUrl } from "@/lib/api";
+import { httpClient } from "@/lib/api/httpClient";
 
 export interface Role {
   id: number;
@@ -61,171 +61,61 @@ export interface UpdateUserDto {
 }
 
 /**
- * User Management Service - following Repository Pattern
- * Handles all API calls related to user management
+ * User Management Service
+ * Thin facade over httpClient for admin user CRUD operations.
  */
 class UserManagementService {
-  private baseUrl: string;
-  private getAuthHeaders(): HeadersInit {
-    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-    return {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    };
-  }
-
-  constructor() {
-    this.baseUrl = getApiBaseUrl();
-  }
-
-  /**
-   * Fetch paginated users with optional filters
-   */
   async getUsers(params: {
     page?: number;
     per_page?: number;
     search?: string;
     role?: string;
   }): Promise<PaginatedResponse<User>> {
-    const queryParams = new URLSearchParams({
+    const query = new URLSearchParams({
       page: (params.page || 1).toString(),
       per_page: (params.per_page || 15).toString(),
     });
+    if (params.search) query.append("search", params.search);
+    if (params.role) query.append("role", params.role);
 
-    if (params.search) queryParams.append("search", params.search);
-    if (params.role) queryParams.append("role", params.role);
-
-    const response = await fetch(`${this.baseUrl}/api/admin/users?${queryParams}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch users");
-    }
-
-    return response.json();
+    return httpClient.get<PaginatedResponse<User>>(`/api/admin/users?${query}`);
   }
 
-  /**
-   * Get user statistics
-   */
   async getStats(): Promise<UserStats> {
-    const response = await fetch(`${this.baseUrl}/api/admin/users/stats`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch stats");
-    }
-
-    return response.json();
+    return httpClient.get<UserStats>("/api/admin/users/stats");
   }
 
-  /**
-   * Get single user details
-   */
   async getUser(id: number): Promise<User> {
-    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch user");
-    }
-
-    const data = await response.json();
+    const data = await httpClient.get<{ user: User }>(`/api/admin/users/${id}`);
     return data.user;
   }
 
-  /**
-   * Create new user
-   */
-  async createUser(data: CreateUserDto): Promise<User> {
-    const response = await fetch(`${this.baseUrl}/api/admin/users`, {
-      method: "POST",
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to create user");
-    }
-
-    const result = await response.json();
-    return result.user;
+  async createUser(dto: CreateUserDto): Promise<User> {
+    const data = await httpClient.post<{ user: User }>("/api/admin/users", dto);
+    return data.user;
   }
 
-  /**
-   * Update existing user
-   */
-  async updateUser(id: number, data: UpdateUserDto): Promise<User> {
-    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}`, {
-      method: "PUT",
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to update user");
-    }
-
-    const result = await response.json();
-    return result.user;
+  async updateUser(id: number, dto: UpdateUserDto): Promise<User> {
+    const data = await httpClient.put<{ user: User }>(`/api/admin/users/${id}`, dto);
+    return data.user;
   }
 
-  /**
-   * Delete user
-   */
   async deleteUser(id: number): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}`, {
-      method: "DELETE",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to delete user");
-    }
+    await httpClient.delete(`/api/admin/users/${id}`);
   }
 
-  /**
-   * Change user role
-   */
   async changeUserRole(id: number, roleId: number): Promise<User> {
-    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}/change-role`, {
-      method: "POST",
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify({ role_id: roleId }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to change role");
-    }
-
-    const result = await response.json();
-    return result.user;
+    const data = await httpClient.post<{ user: User }>(
+      `/api/admin/users/${id}/change-role`,
+      { role_id: roleId }
+    );
+    return data.user;
   }
 
-  /**
-   * Get available roles
-   */
   async getRoles(): Promise<Role[]> {
-    const response = await fetch(`${this.baseUrl}/api/admin/roles`, {
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch roles");
-    }
-
-    const data = await response.json();
+    const data = await httpClient.get<{ roles: Role[] }>("/api/admin/roles");
     return data.roles;
   }
 }
 
-// Export singleton instance
 export const userManagementService = new UserManagementService();

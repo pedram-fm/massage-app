@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import Image from "next/image";
-import { getApiBaseUrl } from "@/lib/api";
+import * as tokenManager from "@/lib/auth/tokenManager";
+import { httpClient } from "@/lib/api/httpClient";
+import type { User } from "@/lib/types/auth";
 
 const inputBase =
   "w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm text-[color:var(--brand)] placeholder:text-[color:var(--muted-text)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)] disabled:cursor-not-allowed disabled:opacity-70";
@@ -34,7 +36,6 @@ export function DashboardModals({
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const apiBaseUrl = useMemo(() => getApiBaseUrl(), []);
 
   const initials = useMemo(() => {
     const first = profile.f_name?.trim()?.charAt(0) ?? "";
@@ -48,39 +49,29 @@ export function DashboardModals({
 
     setStatusMessage("");
     setErrorMessage("");
-    const stored = localStorage.getItem("auth_user");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setProfile({
-          f_name: parsed?.f_name ?? "",
-          l_name: parsed?.l_name ?? "",
-          username: parsed?.username ?? "",
-          email: parsed?.email ?? "",
-          phone: parsed?.phone ?? "",
-          bio: parsed?.bio ?? "",
-          avatar_url: parsed?.avatar_url ?? "",
-        });
-        setEmailVerifiedAt(parsed?.email_verified_at ?? null);
-        setPhoneVerifiedAt(parsed?.phone_verified_at ?? null);
-      } catch {
-        // ignore parsing issues
-      }
+    
+    // Load cached user from tokenManager
+    const cachedUser = tokenManager.getUser();
+    if (cachedUser) {
+      setProfile({
+        f_name: cachedUser?.f_name ?? "",
+        l_name: cachedUser?.l_name ?? "",
+        username: cachedUser?.username ?? "",
+        email: cachedUser?.email ?? "",
+        phone: cachedUser?.phone ?? "",
+        bio: cachedUser?.bio ?? "",
+        avatar_url: cachedUser?.avatar_url ?? "",
+      });
+      setEmailVerifiedAt(cachedUser?.email_verified_at ?? null);
+      setPhoneVerifiedAt(cachedUser?.phone_verified_at ?? null);
     }
 
-    const token = localStorage.getItem("auth_token");
-    const tokenType = localStorage.getItem("token_type") ?? "Bearer";
+    const token = tokenManager.getToken();
     if (!token) return;
 
     setIsLoading(true);
-    fetch(`${apiBaseUrl}/api/auth/me`, {
-      headers: { Authorization: `${tokenType} ${token}`, Accept: "application/json" },
-    })
-      .then(async (response) => {
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(data?.message || "خطا در دریافت اطلاعات کاربر");
-        }
+    httpClient.get<User>('/api/auth/me')
+      .then((data) => {
         setProfile({
           f_name: data?.f_name ?? "",
           l_name: data?.l_name ?? "",
@@ -92,13 +83,14 @@ export function DashboardModals({
         });
         setEmailVerifiedAt(data?.email_verified_at ?? null);
         setPhoneVerifiedAt(data?.phone_verified_at ?? null);
-        localStorage.setItem("auth_user", JSON.stringify(data));
+        tokenManager.setUser(data);
       })
-      .catch((error: Error) => {
-        setErrorMessage(error.message || "خطا در دریافت اطلاعات کاربر");
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "خطا در دریافت اطلاعات کاربر";
+        setErrorMessage(message);
       })
       .finally(() => setIsLoading(false));
-  }, [apiBaseUrl, openProfile]);
+  }, [openProfile]);
 
   const handleProfileChange = (field: keyof typeof profile, value: string) => {
     setProfile((prev) => ({ ...prev, [field]: value }));
@@ -111,8 +103,7 @@ export function DashboardModals({
     setStatusMessage("");
     setErrorMessage("");
 
-    const token = localStorage.getItem("auth_token");
-    const tokenType = localStorage.getItem("token_type") ?? "Bearer";
+    const token = tokenManager.getToken();
 
     if (!token) {
       setErrorMessage("ابتدا وارد حساب خود شوید.");
@@ -121,32 +112,13 @@ export function DashboardModals({
     }
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `${tokenType} ${token}`,
-        },
-        body: JSON.stringify({
-          f_name: profile.f_name,
-          l_name: profile.l_name,
-          username: profile.username,
-          bio: profile.bio,
-          avatar_url: profile.avatar_url,
-        }),
+      const data = await httpClient.put<{ user?: User; message?: string }>('/api/auth/profile', {
+        f_name: profile.f_name,
+        l_name: profile.l_name,
+        username: profile.username,
+        bio: profile.bio,
+        avatar_url: profile.avatar_url,
       });
-
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        const message =
-          data?.message ||
-          data?.errors?.f_name?.[0] ||
-          data?.errors?.l_name?.[0] ||
-          data?.errors?.username?.[0] ||
-          "خطا در ذخیره پروفایل";
-        throw new Error(message);
-      }
 
       if (data?.user) {
         setProfile({
@@ -158,29 +130,25 @@ export function DashboardModals({
           bio: data.user?.bio ?? "",
           avatar_url: data.user?.avatar_url ?? "",
         });
-        localStorage.setItem("auth_user", JSON.stringify(data.user));
+        tokenManager.setUser(data.user);
       }
 
       setStatusMessage(data?.message || "پروفایل با موفقیت به‌روزرسانی شد");
 
+      // Refresh user data from API
       try {
-        const refreshed = await fetch(`${apiBaseUrl}/api/auth/me`, {
-          headers: { Authorization: `${tokenType} ${token}`, Accept: "application/json" },
-        });
-        if (refreshed.ok) {
-          const freshData = await refreshed.json().catch(() => ({}));
-          if (freshData) {
-            setProfile({
-              f_name: freshData?.f_name ?? "",
-              l_name: freshData?.l_name ?? "",
-              username: freshData?.username ?? "",
-              email: freshData?.email ?? profile.email,
-              phone: freshData?.phone ?? profile.phone,
-              bio: freshData?.bio ?? "",
-              avatar_url: freshData?.avatar_url ?? "",
-            });
-            localStorage.setItem("auth_user", JSON.stringify(freshData));
-          }
+        const freshData = await httpClient.get<User>('/api/auth/me');
+        if (freshData) {
+          setProfile({
+            f_name: freshData?.f_name ?? "",
+            l_name: freshData?.l_name ?? "",
+            username: freshData?.username ?? "",
+            email: freshData?.email ?? profile.email,
+            phone: freshData?.phone ?? profile.phone,
+            bio: freshData?.bio ?? "",
+            avatar_url: freshData?.avatar_url ?? "",
+          });
+          tokenManager.setUser(freshData);
         }
       } catch {
         // ignore refresh errors
