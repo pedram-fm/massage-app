@@ -65,6 +65,8 @@ export interface User {
   phone?: string;
   bio?: string;
   avatar_url?: string;
+  email_verified_at?: string | null;
+  phone_verified_at?: string | null;
   role?: Role;
   permissions?: string[];
 }
@@ -81,5 +83,7 @@ export interface AuthContextType {
   isAdmin: () => boolean;
   isMassageTherapist: () => boolean;
   isClient: () => boolean;
-  login: (token: string, user: User) => void;
-  logout: () => void;  updateUser: (userData: Partial<User>) => void;}
+  login: (token: string, user: User, tokenType?: string) => void;
+  logout: () => void;
+  updateUser: (userData: Partial<User>) => void;
+}
