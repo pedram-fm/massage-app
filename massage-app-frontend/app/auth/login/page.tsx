@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ForgotPassword } from "@/components/auth/ForgotPassword";
@@ -10,11 +10,16 @@ import { Register } from "@/components/auth/Register";
 import { FloatingElements } from "@/components/shared/FloatingElements";
 import { CloudCompanion } from "@/components/shared/CloudCompanion";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
-import { getApiBaseUrl } from "@/lib/api";
 import { toast, Toaster } from "sonner";
+import { useAuth } from "@/hooks/auth/useAuth";
+import { validateEmail, validatePhone } from "@/lib/utils/validation";
+import { VALIDATION_RULES, API_CONFIG } from "@/lib/config/constants";
+import { ROUTES, getDashboardRoute } from "@/lib/navigation/routes";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { login, isAuthenticated, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -24,51 +29,19 @@ export default function LoginPage() {
   const [identifierError, setIdentifierError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const apiBaseUrl = useMemo(() => getApiBaseUrl(), []);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
+  // Redirect if already authenticated
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem("auth_token");
-      const tokenType = localStorage.getItem("token_type") ?? "Bearer";
-
-      if (!token) {
-        setIsCheckingAuth(false);
-        return;
+    if (isAuthenticated && user) {
+      const redirect = searchParams.get('redirect');
+      
+      if (redirect) {
+        router.replace(redirect);
+      } else {
+        router.replace(getDashboardRoute(user.role?.name));
       }
-
-      try {
-        const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
-          headers: { Authorization: `${tokenType} ${token}`, Accept: "application/json" },
-        });
-
-        if (response.ok) {
-          router.replace("/dashboard");
-          return;
-        }
-
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("token_type");
-        localStorage.removeItem("auth_user");
-      } catch (error) {
-        console.error("Auth check failed:", error);
-      } finally {
-        setIsCheckingAuth(false);
-      }
-    };
-
-    checkAuth();
-  }, [apiBaseUrl, router]);
-
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePhone = (phone: string): boolean => {
-    const normalized = phone.replace(/[^\d+]/g, "");
-    return normalized.length >= 7;
-  };
+    }
+  }, [isAuthenticated, user, router, searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,8 +66,8 @@ export default function LoginPage() {
     if (!password) {
       setPasswordError("رمز عبور الزامی است");
       hasError = true;
-    } else if (password.length < 8) {
-      setPasswordError("رمز عبور حداقل ۸ کاراکتر باشد");
+    } else if (password.length < VALIDATION_RULES.PASSWORD_MIN_LENGTH) {
+      setPasswordError(`رمز عبور حداقل ${VALIDATION_RULES.PASSWORD_MIN_LENGTH} کاراکتر باشد`);
       hasError = true;
     }
 
@@ -110,7 +83,7 @@ export default function LoginPage() {
         ? { email: identifier, password }
         : { phone: identifier.replace(/[^\d+]/g, ""), password };
 
-      const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(payload),
@@ -125,38 +98,27 @@ export default function LoginPage() {
         return;
       }
 
-      if (data?.access_token) {
-        localStorage.setItem("auth_token", data.access_token);
-        localStorage.setItem("token_type", data.token_type ?? "Bearer");
+      // Use the improved login function
+      if (data?.access_token && data?.user) {
+        login(data.access_token, data.user, data.token_type ?? "Bearer");
+        
+        toast.success("خوش آمدید", {
+          description: "آماده سفر آرامش باشید",
+        });
+        
+        const redirect = searchParams.get('redirect');
+        if (redirect) {
+          router.push(redirect);
+        } else {
+          router.push(getDashboardRoute(data.user.role?.name));
+        }
       }
-      if (data?.user) {
-        localStorage.setItem("auth_user", JSON.stringify(data.user));
-      }
-
-      toast.success("خوش آمدید", {
-        description: "آماده سفر آرامش باشید",
-      });
-      
-      // Role-based redirect
-      const roleName = data?.user?.role?.name;
-      if (roleName === "admin") {
-        router.push("/admin/users");
-      } else if (roleName === "masseur" || roleName === "masseuse") {
-        router.push("/dashboard");
-      } else {
-        router.push("/dashboard");
-      }
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch {
       toast.error("خطا در اتصال به سرور");
     } finally {
       setIsLoading(false);
     }
   };
-
-  if (isCheckingAuth) {
-    return null;
-  }
 
   if (showForgotPassword) {
     return (

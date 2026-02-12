@@ -1,8 +1,11 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { User, RoleName, PermissionName, AuthContextType } from "@/lib/types/auth";
+import { API_CONFIG } from "@/lib/config/constants";
+import * as tokenManager from "@/lib/auth/tokenManager";
+import { ROUTES } from "@/lib/navigation/routes";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -15,75 +18,103 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  const logout = useCallback(() => {
+    tokenManager.clearAuth();
+    setUser(null);
+    router.push(ROUTES.LOGIN);
+  }, [router]);
+
   useEffect(() => {
-    // Load user from localStorage on mount
-    try {
-      const storedUser = localStorage.getItem("auth_user");
-      const token = localStorage.getItem("auth_token");
-      
-      if (storedUser && token) {
-        setUser(JSON.parse(storedUser));
+    const initAuth = async () => {
+      try {
+        const token = tokenManager.getToken();
+
+        if (!token) {
+          setIsLoading(false);
+          return;
+        }
+
+        // Show cached user immediately while verifying in background
+        const cachedUser = tokenManager.getUser();
+        if (cachedUser) {
+          setUser(cachedUser);
+          setIsLoading(false);
+        }
+
+        // Verify token against API
+        try {
+          const res = await fetch(`${API_CONFIG.BASE_URL}/api/auth/me`, {
+            headers: {
+              Authorization: tokenManager.getAuthHeader()!,
+              Accept: "application/json",
+            },
+          });
+
+          if (!res.ok) throw new Error("Token invalid");
+
+          const userData: User = await res.json();
+
+          // Defensive: keep cached role if API didn't return it
+          if (cachedUser?.role && !userData.role) {
+            userData.role = cachedUser.role;
+            userData.permissions = cachedUser.permissions;
+          }
+
+          setUser(userData);
+          tokenManager.setUser(userData);
+        } catch {
+          // Token invalid / expired
+          tokenManager.clearAuth();
+          setUser(null);
+        }
+      } catch {
+        tokenManager.clearAuth();
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading user:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    initAuth();
   }, []);
+
+  // ── role / permission helpers ──
 
   const hasRole = (role: RoleName | RoleName[]): boolean => {
     if (!user?.role) return false;
-    
-    if (Array.isArray(role)) {
-      return role.includes(user.role.name);
-    }
-    
+    if (Array.isArray(role)) return role.includes(user.role.name);
     return user.role.name === role;
   };
 
   const hasPermission = (permission: PermissionName | PermissionName[]): boolean => {
     if (!user?.permissions) return false;
-    
-    if (Array.isArray(permission)) {
-      return permission.some(p => user.permissions?.includes(p));
-    }
-    
+    if (Array.isArray(permission)) return permission.some(p => user.permissions?.includes(p));
     return user.permissions.includes(permission);
   };
 
-  const isAdmin = (): boolean => {
-    return hasRole(RoleName.ADMIN);
-  };
+  const isAdmin = (): boolean => hasRole(RoleName.ADMIN);
+  const isMassageTherapist = (): boolean => hasRole([RoleName.MASSEUR, RoleName.MASSEUSE]);
+  const isClient = (): boolean => hasRole(RoleName.CLIENT);
 
-  const isMassageTherapist = (): boolean => {
-    return hasRole([RoleName.MASSEUR, RoleName.MASSEUSE]);
-  };
+  // ── login ──
 
-  const isClient = (): boolean => {
-    return hasRole(RoleName.CLIENT);
-  };
-
-  const login = (token: string, userData: User) => {
-    localStorage.setItem("auth_token", token);
-    localStorage.setItem("auth_user", JSON.stringify(userData));
+  const login = (token: string, userData: User, tokenType = "Bearer") => {
+    tokenManager.clearAuth();
+    tokenManager.setToken(token, tokenType);
+    tokenManager.setUser(userData);
     setUser(userData);
   };
 
-  const logout = () => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("auth_user");
-    localStorage.removeItem("token_type");
-    setUser(null);
-    router.push("/auth/login");
-  };
+  // ── update user ──
 
   const updateUser = (userData: Partial<User>) => {
     if (!user) return;
-    
-    const updatedUser = { ...user, ...userData };
-    localStorage.setItem("auth_user", JSON.stringify(updatedUser));
-    setUser(updatedUser);
+    const updated = { ...user, ...userData };
+    tokenManager.setUser(updated);
+    setUser(updated);
   };
+
+  // ── context value ──
 
   const value: AuthContextType = {
     user,

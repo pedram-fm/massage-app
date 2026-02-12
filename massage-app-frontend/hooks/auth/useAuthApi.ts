@@ -1,7 +1,18 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { getApiBaseUrl, readJsonSafe } from "@/lib/api";
+import { API_CONFIG } from "@/lib/config/constants";
+import { ROUTES, getDashboardRoute } from "@/lib/navigation/routes";
+import type { User } from "@/lib/types/auth";
+
+/** Safely parse JSON from a Response — returns null on failure */
+async function readJsonSafe<T>(response: Response): Promise<T | null> {
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
 
 type ApiErrorShape = {
     message?: string;
@@ -15,7 +26,7 @@ type ApiErrorShape = {
 type AuthSuccessShape = {
     access_token?: string;
     token_type?: string;
-    user?: Record<string, unknown>;
+    user?: User;
     code_debug?: string;
     message?: string;
 };
@@ -26,13 +37,12 @@ type ResendPayload = Record<string, string | undefined>;
 
 export function useAuthApi() {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const apiBaseUrl = useMemo(() => getApiBaseUrl(), []);
     const router = useRouter();
 
     const register = async (payload: RegisterPayload) => {
         setIsSubmitting(true);
         try {
-            const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Accept: "application/json" },
                 body: JSON.stringify(payload),
@@ -63,7 +73,7 @@ export function useAuthApi() {
 
     const verify = async (endpoint: string, payload: VerifyPayload) => {
         try {
-            const response = await fetch(`${apiBaseUrl}${endpoint}`, {
+            const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Accept: "application/json" },
                 body: JSON.stringify(payload),
@@ -76,37 +86,28 @@ export function useAuthApi() {
             }
 
             if (data?.access_token) {
-                localStorage.setItem("auth_token", data.access_token);
-                localStorage.setItem("token_type", data.token_type ?? "Bearer");
-            }
-            if (data?.user) {
-                localStorage.setItem("auth_user", JSON.stringify(data.user));
+                // Use tokenManager — same cookie-based storage as everywhere else
+                const tokenManager = await import('@/lib/auth/tokenManager');
+                tokenManager.setToken(data.access_token, data.token_type ?? 'Bearer');
+                if (data.user) {
+                  tokenManager.setUser(data.user);
+                }
             }
 
             toast.success("ثبت نام با موفقیت انجام شد");
             
-            // Role-based redirect
-            const user = data?.user as any;
-            const roleName = user?.role?.name;
-            
-            if (roleName === "admin") {
-                router.push("/admin/users");
-            } else if (roleName === "masseur" || roleName === "masseuse") {
-                router.push("/dashboard");
-            } else {
-                router.push("/dashboard");
-            }
+            const user = data?.user;
+            router.push(getDashboardRoute(user?.role?.name));
             
             return { ok: true };
-        } catch (error) {
-            console.error("Verify error:", error);
+        } catch {
             return { ok: false, message: "خطا در اتصال به سرور" };
         }
     };
 
     const resend = async (endpoint: string, payload: ResendPayload) => {
         try {
-            const response = await fetch(`${apiBaseUrl}${endpoint}`, {
+            const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Accept: "application/json" },
                 body: JSON.stringify(payload),
@@ -123,8 +124,7 @@ export function useAuthApi() {
             }
 
             return { ok: true };
-        } catch (error) {
-            console.error("Resend error:", error);
+        } catch {
             return { ok: false, message: "خطا در اتصال به سرور" };
         }
     };

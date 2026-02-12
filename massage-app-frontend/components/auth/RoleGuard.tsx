@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { RoleName } from "@/lib/types/auth";
+import { ROUTES, getDashboardRoute } from "@/lib/navigation/routes";
 
 interface RoleGuardProps {
   children: React.ReactNode;
@@ -24,7 +25,7 @@ interface RoleGuardProps {
 export function RoleGuard({ 
   children, 
   allowedRoles, 
-  redirectTo = "/auth/login",
+  redirectTo = ROUTES.LOGIN,
   fallback = null 
 }: RoleGuardProps) {
   const { user, isLoading, hasRole } = useAuth();
@@ -35,20 +36,20 @@ export function RoleGuard({
       if (!user) {
         router.push(redirectTo);
       } else if (!hasRole(allowedRoles)) {
-        // Redirect to appropriate dashboard based on current role
-        if (user.role?.name === RoleName.ADMIN) {
-          router.push("/admin/dashboard");
-        } else if (user.role?.name === RoleName.MASSEUR || user.role?.name === RoleName.MASSEUSE) {
-          router.push("/therapist/dashboard");
-        } else {
-          router.push("/dashboard");
-        }
+        router.push(getDashboardRoute(user.role?.name));
       }
     }
   }, [user, isLoading, hasRole, allowedRoles, redirectTo, router]);
 
   if (isLoading) {
-    return <div>{fallback || "جاری بارگذاری..."}</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[color:var(--surface)]">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[color:var(--brand)] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+          <p className="mt-4 text-[color:var(--muted-text)]">جاری بارگذاری...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!user || !hasRole(allowedRoles)) {

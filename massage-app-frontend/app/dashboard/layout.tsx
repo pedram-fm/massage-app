@@ -17,8 +17,10 @@ import { DashboardModals } from "@/components/admin/DashboardModals";
 import { NewReservationModal } from "@/components/admin/NewReservationModal";
 import { CloudCompanion } from "@/components/shared/CloudCompanion";
 import { UserHeader } from "@/components/shared/UserHeader";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/auth/useAuth";
+import { ROUTES } from "@/lib/navigation/routes";
 
 const menuItems = [
   { href: "/dashboard", label: "نمای کلی", icon: LayoutDashboard },
@@ -29,53 +31,42 @@ const menuItems = [
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const { user: authUser, isLoading: authLoading, isAuthenticated, logout } = useAuth();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [openProfile, setOpenProfile] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
   const [openReservation, setOpenReservation] = useState(false);
-  const apiBaseUrl = useMemo(() => {
-    if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-      return process.env.NEXT_PUBLIC_API_BASE_URL;
-    }
-    if (typeof window !== "undefined") {
-      const { protocol, hostname } = window.location;
-      return `${protocol}//${hostname}:8000`;
-    }
-    return "http://localhost:8000";
-  }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      router.replace("/auth/login");
+    if (authLoading) return;
+    
+    if (!isAuthenticated || !authUser) {
+      router.replace(ROUTES.LOGIN);
       return;
     }
+    
+    // Redirect admins to admin panel
+    if (authUser.role?.name === "admin") {
+      router.replace(ROUTES.ADMIN_USERS);
+      return;
+    }
+    
     setIsCheckingAuth(false);
-  }, [router]);
+  }, [authUser, authLoading, isAuthenticated, router]);
 
-  if (isCheckingAuth) {
-    return null;
+  if (isCheckingAuth || authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[color:var(--surface)]">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[color:var(--brand)] border-r-transparent"></div>
+          <p className="mt-4 text-[color:var(--muted-text)]">در حال بارگذاری...</p>
+        </div>
+      </div>
+    );
   }
 
-  const handleLogout = async () => {
-    const token = localStorage.getItem("auth_token");
-    const tokenType = localStorage.getItem("token_type") ?? "Bearer";
-
-    try {
-      if (token) {
-        await fetch(`${apiBaseUrl}/api/auth/logout`, {
-          method: "POST",
-          headers: { Authorization: `${tokenType} ${token}`, Accept: "application/json" },
-        });
-      }
-    } catch (error) {
-      console.error("Logout failed:", error);
-    } finally {
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("token_type");
-      localStorage.removeItem("auth_user");
-      router.replace("/auth/login");
-    }
+  const handleLogout = () => {
+    logout();
   };
 
   return (

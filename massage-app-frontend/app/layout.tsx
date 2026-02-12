@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/hooks/auth/useAuth";
+import { TokenExpiryHandler } from "@/components/auth/TokenExpiryHandler";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default function RootLayout({
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <body className="antialiased">
         <AuthProvider>
+          <TokenExpiryHandler />
           {children}
           <Toaster position="top-center" richColors />
         </AuthProvider>
