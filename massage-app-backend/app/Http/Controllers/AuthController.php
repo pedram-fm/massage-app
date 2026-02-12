@@ -343,12 +343,34 @@ class AuthController extends Controller
      *
      * @group Auth (Protected)
      * @authenticated
-     * @response 200 {"id":1,"phone":"09...","f_name":"Ali"}
+     * @response 200 {"id":1,"phone":"09...","f_name":"Ali","role":{"id":1,"name":"admin","display_name":"مدیر"},"permissions":["manage_users"]}
      */
     #[Group('Auth (Protected)', weight: 2)]
     public function me(Request $request): JsonResponse
     {
-        return response()->json($request->user());
+        $user = $request->user();
+        $user->loadRoleWithPermissions();
+
+        return response()->json([
+            'id' => $user->id,
+            'f_name' => $user->f_name,
+            'l_name' => $user->l_name,
+            'username' => $user->username,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'bio' => $user->bio,
+            'avatar_url' => $user->avatar_url,
+            'email_verified_at' => $user->email_verified_at,
+            'phone_verified_at' => $user->phone_verified_at,
+            'role' => $user->role ? [
+                'id' => $user->role->id,
+                'name' => $user->role->name,
+                'display_name' => $user->role->display_name,
+            ] : null,
+            'permissions' => $user->role
+                ? $user->role->permissions->pluck('name')->toArray()
+                : [],
+        ]);
     }
 
     /**
