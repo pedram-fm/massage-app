@@ -18,6 +18,7 @@ const moods = [
 export function CloudCompanion() {
   const [index, setIndex] = useState(0);
   const [variant, setVariant] = useState("idle");
+  const [mounted, setMounted] = useState(false);
   const controls = useAnimation();
 
   // Use a ref for the spotlight to update it without re-renders
@@ -26,6 +27,11 @@ export function CloudCompanion() {
 
   const size = useRef({ width: 220, height: 90 });
   const mood = useMemo(() => moods[index % moods.length], [index]);
+
+  // Only render on client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (buttonRef.current) {
@@ -105,7 +111,8 @@ export function CloudCompanion() {
     controls.set({ opacity: 1 });
   }, [controls]);
 
-  if (typeof document === "undefined") {
+  // Don't render portal until mounted on client
+  if (!mounted) {
     return null;
   }
 
