@@ -1,0 +1,28 @@
+{
+  "recommendations": [
+    // Essential
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    
+    // TODO Management
+    "gruntfuggly.todo-tree",
+    "wayou.vscode-todo-highlight",
+    
+    // Git
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    
+    // Productivity
+    "usernamehw.errorlens",
+    "christian-kohler.path-intellisense",
+    "visualstudioexptteam.vscodeintellicode",
+    
+    // Testing
+    "orta.vscode-jest",
+    
+    // Documentation
+    "yzhang.markdown-all-in-one",
+    "bierner.markdown-checkbox"
+  ]
+}

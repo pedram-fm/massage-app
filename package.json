@@ -1,0 +1,33 @@
+{
+  "name": "massage-app-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Massage App - Workspace Scripts",
+  "scripts": {
+    "todo:stats": "node scripts/manage-todos.js stats",
+    "todo:list": "node scripts/manage-todos.js list",
+    "todo:completed": "node scripts/manage-todos.js completed",
+    "todo:p0": "node scripts/manage-todos.js priority P0",
+    "todo:p1": "node scripts/manage-todos.js priority P1",
+    "todo:p2": "node scripts/manage-todos.js priority P2",
+    "todo:search": "node scripts/manage-todos.js search",
+    "todo:help": "node scripts/manage-todos.js help",
+    "frontend:dev": "cd massage-app-frontend && npm run dev",
+    "frontend:build": "cd massage-app-frontend && npm run build",
+    "frontend:lint": "cd massage-app-frontend && npm run lint",
+    "backend:serve": "cd massage-app-backend && php artisan serve",
+    "backend:test": "cd massage-app-backend && php artisan test",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "keywords": [
+    "massage",
+    "spa",
+    "booking",
+    "nextjs",
+    "laravel"
+  ],
+  "author": "",
+  "license": "MIT"
+}

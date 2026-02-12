@@ -1,0 +1,112 @@
+{
+  // TODO Highlighting
+  "todo-tree.general.tags": [
+    "TODO",
+    "FIXME",
+    "BUG",
+    "HACK",
+    "XXX",
+    "NOTE",
+    "REVIEW",
+    "SEC",
+    "PERF",
+    "ARCH",
+    "A11Y",
+    "UX",
+    "FUNC",
+    "CONF",
+    "TEST",
+    "QA",
+    "DOC",
+    "MON"
+  ],
+  "todo-tree.highlights.defaultHighlight": {
+    "icon": "alert",
+    "type": "text",
+    "foreground": "#fff",
+    "opacity": 50
+  },
+  "todo-tree.highlights.customHighlight": {
+    "TODO": {
+      "icon": "check",
+      "foreground": "#fff",
+      "background": "#ffbd2e",
+      "iconColour": "#ffbd2e"
+    },
+    "FIXME": {
+      "icon": "bug",
+      "foreground": "#fff",
+      "background": "#f06292",
+      "iconColour": "#f06292"
+    },
+    "BUG": {
+      "icon": "bug",
+      "foreground": "#fff",
+      "background": "#d32f2f",
+      "iconColour": "#d32f2f"
+    },
+    "SEC": {
+      "icon": "shield",
+      "foreground": "#fff",
+      "background": "#d32f2f",
+      "iconColour": "#d32f2f"
+    },
+    "PERF": {
+      "icon": "zap",
+      "foreground": "#fff",
+      "background": "#2196f3",
+      "iconColour": "#2196f3"
+    },
+    "ARCH": {
+      "icon": "package",
+      "foreground": "#fff",
+      "background": "#ff9800",
+      "iconColour": "#ff9800"
+    },
+    "A11Y": {
+      "icon": "eye",
+      "foreground": "#fff",
+      "background": "#4caf50",
+      "iconColour": "#4caf50"
+    }
+  },
+  
+  // Editor Settings
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  
+  // Files
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "files.exclude": {
+    "**/.next": true,
+    "**/node_modules": true
+  },
+  
+  // TypeScript
+  "typescript.tsdk": "massage-app-frontend/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  
+  // Tailwind CSS
+  "tailwindCSS.experimental.configFile": "massage-app-frontend/tailwind.config.ts",
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  
+  // Git
+  "git.ignoreLimitWarning": true,
+  
+  // Search
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.git": true
+  }
+}

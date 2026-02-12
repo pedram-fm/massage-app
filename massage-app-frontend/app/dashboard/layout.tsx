@@ -23,6 +23,7 @@ const menuItems = [
   { href: "/dashboard", label: "نمای کلی", icon: LayoutDashboard },
   { href: "/dashboard/appointments", label: "جلسه‌های من", icon: Calendar },
   { href: "/dashboard/notes", label: "یادداشت درمانگر", icon: ClipboardList },
+  { href: "/todos", label: "مدیریت تسک‌ها", icon: ClipboardList },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
