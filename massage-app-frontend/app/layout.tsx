@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/hooks/auth/useAuth";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "سرنیتی اسپا | ماساژ و تندرستی",
@@ -14,7 +16,10 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <body className="antialiased">
-        {children}
+        <AuthProvider>
+          {children}
+          <Toaster position="top-center" richColors />
+        </AuthProvider>
       </body>
     </html>
   );

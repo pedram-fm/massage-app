@@ -84,7 +84,19 @@ export function useAuthApi() {
             }
 
             toast.success("ثبت نام با موفقیت انجام شد");
-            router.push("/dashboard");
+            
+            // Role-based redirect
+            const user = data?.user as any;
+            const roleName = user?.role?.name;
+            
+            if (roleName === "admin") {
+                router.push("/admin/users");
+            } else if (roleName === "masseur" || roleName === "masseuse") {
+                router.push("/dashboard");
+            } else {
+                router.push("/dashboard");
+            }
+            
             return { ok: true };
         } catch (error) {
             console.error("Verify error:", error);

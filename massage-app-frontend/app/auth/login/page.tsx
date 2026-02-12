@@ -136,7 +136,16 @@ export default function LoginPage() {
       toast.success("خوش آمدید", {
         description: "آماده سفر آرامش باشید",
       });
-      router.push("/dashboard");
+      
+      // Role-based redirect
+      const roleName = data?.user?.role?.name;
+      if (roleName === "admin") {
+        router.push("/admin/users");
+      } else if (roleName === "masseur" || roleName === "masseuse") {
+        router.push("/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (error) {
       console.error("Login error:", error);
       toast.error("خطا در اتصال به سرور");

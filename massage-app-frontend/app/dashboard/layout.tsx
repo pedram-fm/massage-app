@@ -16,6 +16,7 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { DashboardModals } from "@/components/admin/DashboardModals";
 import { NewReservationModal } from "@/components/admin/NewReservationModal";
 import { CloudCompanion } from "@/components/shared/CloudCompanion";
+import { UserHeader } from "@/components/shared/UserHeader";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -98,20 +99,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               >
                 رزرو جدید
               </button>
-              <button
-                onClick={() => setOpenSettings(true)}
-                className="inline-flex items-center gap-2 rounded-full border border-[color:var(--surface-muted)] bg-[color:var(--surface)] px-4 py-2 text-xs font-medium text-[color:var(--muted-text)] transition hover:text-[color:var(--brand)]"
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-                تنظیمات
-              </button>
-              <button
-                onClick={() => setOpenProfile(true)}
-                className="inline-flex items-center gap-2 rounded-full border border-[color:var(--surface-muted)] bg-[color:var(--surface)] px-4 py-2 text-xs font-medium text-[color:var(--muted-text)] transition hover:text-[color:var(--brand)]"
-              >
-                <User className="h-4 w-4" />
-                پروفایل
-              </button>
+              <UserHeader />
             </div>
           </header>
 
