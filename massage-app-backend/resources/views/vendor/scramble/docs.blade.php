@@ -89,92 +89,139 @@
     (async () => {
         const docs = document.getElementById('docs');
         const spec = @json($spec);
-
-        // ── Hierarchical tag groups for sidebar ──────────────
-        spec['x-tagGroups'] = [
-            {
-                name: 'Auth',
-                tags: ['Auth · Public', 'Auth · Protected'],
-            },
-            {
-                name: 'Admin',
-                tags: ['Admin · Dashboard', 'Admin · User Management'],
-            },
-            {
-                name: 'Therapist',
-                tags: ['Therapist'],
-            },
-            {
-                name: 'Client',
-                tags: ['Client'],
-            },
-            {
-                name: 'System',
-                tags: ['System · Logs'],
-            },
-        ];
-
         docs.apiDescriptionDocument = spec;
     })();
 </script>
 
-{{-- ── Auto-set Bearer token after login via Try It ────────── --}}
+{{-- ══════════════════════════════════════════════════════════════════ --}}
+{{-- Auto-capture Bearer token after login and show it prominently      --}}
+{{-- ══════════════════════════════════════════════════════════════════ --}}
 <script>
     (function () {
-        const _fetch = window.fetch;
+        let capturedToken = localStorage.getItem('__API_TOKEN__') || null;
+        
+        // Restore token from previous session
+        if (capturedToken) {
+            console.info('🔐 Token restored from localStorage');
+        }
 
-        window.fetch = async function (url, options) {
-            const response = await _fetch(url, options);
+        const originalFetch = window.fetch;
 
-            // Intercept login / OTP verify / register responses
-            const urlStr = typeof url === 'string' ? url : url.url || '';
-            const isAuthEndpoint =
-                urlStr.includes('/v1/auth/login') ||
-                urlStr.includes('/v1/auth/otp/verify') ||
-                urlStr.includes('/v1/auth/register');
+        window.fetch = async function (url, options = {}) {
+            const urlString = typeof url === 'string' ? url : (url?.url || url?.href || '');
+
+            // ═══ Step 1: Inject token into ALL outgoing requests ═══
+            if (capturedToken) {
+                options.headers = options.headers || {};
+                const authValue = 'Bearer ' + capturedToken;
+                
+                if (options.headers instanceof Headers) {
+                    if (!options.headers.has('Authorization')) {
+                        options.headers.set('Authorization', authValue);
+                    }
+                } else if (Array.isArray(options.headers)) {
+                    const hasAuth = options.headers.some(([k]) => k.toLowerCase() === 'authorization');
+                    if (!hasAuth) options.headers.push(['Authorization', authValue]);
+                } else {
+                    if (!options.headers['Authorization'] && !options.headers['authorization']) {
+                        options.headers['Authorization'] = authValue;
+                    }
+                }
+            }
+
+            // ═══ Step 2: Execute request ═══
+            const response = await originalFetch(url, options);
+
+            // ═══ Step 3: Capture token from auth responses ═══
+            const isAuthEndpoint = 
+                urlString.includes('/v1/auth/login') ||
+                urlString.includes('/v1/auth/otp/verify') ||
+                urlString.includes('/v1/auth/register');
 
             if (isAuthEndpoint && response.ok) {
                 try {
                     const cloned = response.clone();
-                    const body = await cloned.json();
-                    const token = body?.data?.token || body?.token;
-
-                    if (token) {
-                        // Store globally so subsequent Try It requests include it
-                        window.__SCRAMBLE_BEARER_TOKEN__ = token;
-                        console.info('[Scramble] Bearer token captured ✓');
+                    const json = await cloned.json();
+                    const token = json?.data?.token || json?.token || json?.data?.access_token || json?.access_token;
+                    
+                    if (token && token !== capturedToken) {
+                        capturedToken = token;
+                        localStorage.setItem('__API_TOKEN__', token);
+                        showTokenModal(token);
                     }
-                } catch (_) { /* non-JSON or no token — ignore */ }
+                } catch (_) { /* ignore */ }
             }
 
             return response;
         };
 
-        // Patch fetch again to inject the stored bearer token into every request
-        const _fetch2 = window.fetch;
-        window.fetch = async function (url, options = {}) {
-            if (window.__SCRAMBLE_BEARER_TOKEN__) {
-                options.headers = options.headers || {};
+        // ═══ Show token in a copyable modal ═══
+        function showTokenModal(token) {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:999999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = 'background:white;border-radius:12px;padding:32px;max-width:600px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+            
+            modal.innerHTML = `
+                <div style="font-family:system-ui,-apple-system,sans-serif;">
+                    <div style="font-size:24px;font-weight:600;margin-bottom:8px;color:#059669;">
+                        ✓ Authentication Successful
+                    </div>
+                    <div style="color:#6b7280;margin-bottom:20px;">
+                        Your Bearer token has been captured. Use it in curl/Postman:
+                    </div>
+                    <div style="background:#f3f4f6;border:1px solid #d1d5db;border-radius:8px;padding:16px;margin-bottom:16px;position:relative;">
+                        <pre style="margin:0;font-family:ui-monospace,monospace;font-size:12px;color:#374151;overflow-x:auto;white-space:pre-wrap;word-break:break-all;">${token}</pre>
+                        <button id="copyBtn" style="position:absolute;top:12px;right:12px;background:#3b82f6;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;">
+                            Copy
+                        </button>
+                    </div>
+                    <div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:12px;margin-bottom:20px;font-size:13px;color:#92400e;">
+                        <strong>⚠️ Example curl:</strong><br>
+                        <code style="font-size:11px;display:block;margin-top:8px;color:#78350f;">curl -H "Authorization: Bearer ${token.substring(0, 30)}..." http://localhost:8000/v1/admin/users</code>
+                    </div>
+                    <button id="closeBtn" style="width:100%;background:#10b981;color:white;border:none;padding:12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">
+                        Got it! Close
+                    </button>
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
 
-                const setHeader = (headers, key, value) => {
-                    if (headers instanceof Headers) {
-                        if (!headers.has(key)) headers.set(key, value);
-                    } else if (Array.isArray(headers)) {
-                        if (!headers.some(([k]) => k.toLowerCase() === key.toLowerCase())) {
-                            headers.push([key, value]);
-                        }
-                    } else {
-                        if (!headers[key] && !headers[key.toLowerCase()]) {
-                            headers[key] = value;
-                        }
-                    }
-                };
+            // Copy button
+            modal.querySelector('#copyBtn').onclick = () => {
+                navigator.clipboard.writeText(token).then(() => {
+                    const btn = modal.querySelector('#copyBtn');
+                    btn.textContent = '✓ Copied';
+                    btn.style.background = '#10b981';
+                    setTimeout(() => {
+                        btn.textContent = 'Copy';
+                        btn.style.background = '#3b82f6';
+                    }, 2000);
+                });
+            };
 
-                setHeader(options.headers, 'Authorization', 'Bearer ' + window.__SCRAMBLE_BEARER_TOKEN__);
+            // Close button
+            modal.querySelector('#closeBtn').onclick = () => overlay.remove();
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        }
+
+        // ═══ Add "Clear Token" button to page ═══
+        const clearBtn = document.createElement('button');
+        clearBtn.textContent = capturedToken ? '🔓 Clear Token' : '🔒 No Token';
+        clearBtn.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#ef4444;color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.15);';
+        clearBtn.onclick = () => {
+            if (capturedToken) {
+                localStorage.removeItem('__API_TOKEN__');
+                capturedToken = null;
+                clearBtn.textContent = '🔒 No Token';
+                clearBtn.style.background = '#6b7280';
+                alert('Token cleared. You\'ll need to login again.');
             }
-
-            return _fetch2(url, options);
         };
+        document.body.appendChild(clearBtn);
     })();
 </script>
 

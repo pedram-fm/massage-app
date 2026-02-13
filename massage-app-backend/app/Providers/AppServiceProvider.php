@@ -35,55 +35,47 @@ class AppServiceProvider extends ServiceProvider
     {
         /*
         |----------------------------------------------------------------------
-        | Tag resolver — groups endpoints by module in the Swagger UI sidebar.
+        | Tag resolver — organized grouping with emoji prefixes
         |----------------------------------------------------------------------
         |
-        | Module mapping:
-        |  v1/auth/*          → "Auth · Public"  or  "Auth · Protected"
-        |  v1/admin/users/*   → "Admin · User Management"
-        |  v1/admin/roles     → "Admin · User Management"
-        |  v1/admin/dashboard → "Admin · Dashboard"
-        |  v1/therapist/*     → "Therapist"
-        |  v1/client/*        → "Client"
-        |  v1/logs/*          → "System · Logs"
-        |  fallback           → Controller class name
+        | Using emoji + numbers for visual grouping in Swagger sidebar
         |
         */
         Scramble::resolveTagsUsing(function (RouteInfo $routeInfo, Operation $operation): array {
             $uri = ltrim($routeInfo->route->uri(), '/');
 
-            // ── Auth module ──────────────────────────────────
+            // 🔐 Auth module
             if (Str::startsWith($uri, 'v1/auth')) {
                 $isProtected = collect($routeInfo->route->middleware())->contains(
                     fn (string $mw) => Str::startsWith($mw, 'auth:') || $mw === 'auth'
                 );
-                return [$isProtected ? 'Auth · Protected' : 'Auth · Public'];
+                return [$isProtected ? '🔐 Auth — Protected' : '🔐 Auth — Public'];
             }
 
-            // ── Admin module ─────────────────────────────────
+            // 👥 Admin module
             if (Str::startsWith($uri, 'v1/admin')) {
                 if (Str::contains($uri, ['/users', '/roles'])) {
-                    return ['Admin · User Management'];
+                    return ['👥 Admin — User Management'];
                 }
-                return ['Admin · Dashboard'];
+                return ['👥 Admin — Dashboard'];
             }
 
-            // ── Therapist placeholder ────────────────────────
+            // 💆 Therapist
             if (Str::startsWith($uri, 'v1/therapist')) {
-                return ['Therapist'];
+                return ['💆 Therapist — Dashboard'];
             }
 
-            // ── Client placeholder ───────────────────────────
+            // 🧑 Client
             if (Str::startsWith($uri, 'v1/client')) {
-                return ['Client'];
+                return ['🧑 Client — Dashboard'];
             }
 
-            // ── System / Shared ──────────────────────────────
+            // ⚙️ System
             if (Str::startsWith($uri, 'v1/logs')) {
-                return ['System · Logs'];
+                return ['⚙️ System — Logs'];
             }
 
-            // ── Fallback: derive from controller name ────────
+            // Fallback
             $className = $routeInfo->className();
             return [$className
                 ? (string) Str::of(class_basename($className))->replace('Controller', '')
