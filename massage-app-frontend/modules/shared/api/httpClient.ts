@@ -3,7 +3,7 @@
  * Uses tokenManager for auth headers (cookie-based).
  */
 
-import * as tokenManager from '../auth/tokenManager';
+import * as tokenManager from '../../auth/utils/tokenManager';
 import { API_CONFIG, HTTP_STATUS } from '../config/constants';
 import { ROUTES } from '../navigation/routes';
 
