@@ -78,42 +78,42 @@ class UserManagementService {
     if (params.search) query.append("search", params.search);
     if (params.role) query.append("role", params.role);
 
-    return httpClient.get<PaginatedResponse<User>>(`/api/admin/users?${query}`);
+    return httpClient.get<PaginatedResponse<User>>(`/v1/admin/users?${query}`);
   }
 
   async getStats(): Promise<UserStats> {
-    return httpClient.get<UserStats>("/api/admin/users/stats");
+    return httpClient.get<UserStats>("/v1/admin/users/stats");
   }
 
   async getUser(id: number): Promise<User> {
-    const data = await httpClient.get<{ user: User }>(`/api/admin/users/${id}`);
+    const data = await httpClient.get<{ user: User }>(`/v1/admin/users/${id}`);
     return data.user;
   }
 
   async createUser(dto: CreateUserDto): Promise<User> {
-    const data = await httpClient.post<{ user: User }>("/api/admin/users", dto);
+    const data = await httpClient.post<{ user: User }>("/v1/admin/users", dto);
     return data.user;
   }
 
   async updateUser(id: number, dto: UpdateUserDto): Promise<User> {
-    const data = await httpClient.put<{ user: User }>(`/api/admin/users/${id}`, dto);
+    const data = await httpClient.put<{ user: User }>(`/v1/admin/users/${id}`, dto);
     return data.user;
   }
 
   async deleteUser(id: number): Promise<void> {
-    await httpClient.delete(`/api/admin/users/${id}`);
+    await httpClient.delete(`/v1/admin/users/${id}`);
   }
 
   async changeUserRole(id: number, roleId: number): Promise<User> {
     const data = await httpClient.post<{ user: User }>(
-      `/api/admin/users/${id}/change-role`,
+      `/v1/admin/users/${id}/change-role`,
       { role_id: roleId }
     );
     return data.user;
   }
 
   async getRoles(): Promise<Role[]> {
-    const data = await httpClient.get<{ roles: Role[] }>("/api/admin/roles");
+    const data = await httpClient.get<{ roles: Role[] }>("/v1/admin/roles");
     return data.roles;
   }
 }

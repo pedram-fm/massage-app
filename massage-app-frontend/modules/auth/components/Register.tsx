@@ -59,13 +59,13 @@ export function Register({ onBack, isDark }: RegisterProps) {
       ? { email: registerPayload.email, code: otp }
       : { phone: registerPayload.phone, otp };
 
-    const endpoint = isEmail ? "/api/auth/register/verify" : "/api/auth/otp/verify";
+    const endpoint = isEmail ? "/v1/auth/register/verify" : "/v1/auth/otp/verify";
     return await verify(endpoint, payload);
   };
 
   const handleResend = async () => {
     const isEmail = verifyMode === "email";
-    const endpoint = isEmail ? "/api/auth/register/resend" : "/api/auth/otp/request";
+    const endpoint = isEmail ? "/v1/auth/register/resend" : "/v1/auth/otp/request";
     const payload = isEmail
       ? { email: registerPayload.email }
       : {

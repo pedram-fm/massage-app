@@ -83,7 +83,7 @@ export default function LoginPage() {
         ? { email: identifier, password }
         : { phone: identifier.replace(/[^\d+]/g, ""), password };
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/login`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/v1/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(payload),

@@ -70,7 +70,7 @@ export function DashboardModals({
     if (!token) return;
 
     setIsLoading(true);
-    httpClient.get<User>('/api/auth/me')
+    httpClient.get<User>('/v1/auth/me')
       .then((data) => {
         setProfile({
           f_name: data?.f_name ?? "",
@@ -112,7 +112,7 @@ export function DashboardModals({
     }
 
     try {
-      const data = await httpClient.put<{ user?: User; message?: string }>('/api/auth/profile', {
+      const data = await httpClient.put<{ user?: User; message?: string }>('/v1/auth/profile', {
         f_name: profile.f_name,
         l_name: profile.l_name,
         username: profile.username,
@@ -137,7 +137,7 @@ export function DashboardModals({
 
       // Refresh user data from API
       try {
-        const freshData = await httpClient.get<User>('/api/auth/me');
+        const freshData = await httpClient.get<User>('/v1/auth/me');
         if (freshData) {
           setProfile({
             f_name: freshData?.f_name ?? "",

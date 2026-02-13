@@ -42,7 +42,7 @@ export function useAuthApi() {
     const register = async (payload: RegisterPayload) => {
         setIsSubmitting(true);
         try {
-            const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/register`, {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/v1/auth/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Accept: "application/json" },
                 body: JSON.stringify(payload),

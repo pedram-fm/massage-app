@@ -59,7 +59,7 @@ export function ForgotPassword({ onBack, isDark }: ForgotPasswordProps) {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/password/forgot`, {
+      const response = await fetch(`${apiBaseUrl}/v1/auth/password/forgot`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({ email }),
@@ -87,7 +87,7 @@ export function ForgotPassword({ onBack, isDark }: ForgotPasswordProps) {
   };
 
   const handleOTPVerified = async (otp: string) => {
-    const response = await fetch(`${apiBaseUrl}/api/auth/password/verify`, {
+    const response = await fetch(`${apiBaseUrl}/v1/auth/password/verify`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ email, code: otp }),
@@ -106,7 +106,7 @@ export function ForgotPassword({ onBack, isDark }: ForgotPasswordProps) {
   };
 
   const handleResend = async () => {
-    const response = await fetch(`${apiBaseUrl}/api/auth/password/forgot`, {
+    const response = await fetch(`${apiBaseUrl}/v1/auth/password/forgot`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ email }),
@@ -154,7 +154,7 @@ export function ForgotPassword({ onBack, isDark }: ForgotPasswordProps) {
 
     setIsResetting(true);
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/password/reset`, {
+      const response = await fetch(`${apiBaseUrl}/v1/auth/password/reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
