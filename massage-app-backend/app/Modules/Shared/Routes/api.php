@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('v1/logs/tail', [LogController::class, 'tail']);
 
-// Therapist routes placeholder (both masseur and masseuse)
-Route::middleware(['auth:api', 'role:' . Role::MASSEUR . ',' . Role::MASSEUSE])->prefix('v1/therapist')->group(function () {
+// Therapist routes
+Route::middleware(['auth:api', 'role:' . Role::THERAPIST])->prefix('v1/therapist')->group(function () {
     Route::get('/dashboard', function () {
         return response()->json([
             'message' => 'Welcome to Therapist Dashboard',

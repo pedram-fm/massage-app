@@ -15,15 +15,14 @@ class RolePermissionSeeder extends Seeder
     {
         // Get all roles
         $adminRole = Role::where('name', Role::ADMIN)->first();
-        $masseurRole = Role::where('name', Role::MASSEUR)->first();
-        $masseuseRole = Role::where('name', Role::MASSEUSE)->first();
+        $therapistRole = Role::where('name', Role::THERAPIST)->first();
         $clientRole = Role::where('name', Role::CLIENT)->first();
 
         // Admin gets all permissions
         $allPermissions = Permission::all();
         $adminRole->permissions()->sync($allPermissions->pluck('id'));
 
-        // Massage Therapist permissions (same for masseur and masseuse)
+        // Massage Therapist permissions
         $therapistPermissions = Permission::whereIn('name', [
             Permission::SET_AVAILABILITY,
             Permission::VIEW_OWN_SESSIONS,
@@ -33,8 +32,7 @@ class RolePermissionSeeder extends Seeder
             Permission::MANAGE_OWN_PROFILE,
         ])->pluck('id');
 
-        $masseurRole->permissions()->sync($therapistPermissions);
-        $masseuseRole->permissions()->sync($therapistPermissions);
+        $therapistRole->permissions()->sync($therapistPermissions);
 
         // Client permissions
         $clientPermissions = Permission::whereIn('name', [

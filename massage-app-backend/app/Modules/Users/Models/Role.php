@@ -26,8 +26,7 @@ class Role extends Model
      * Role constants
      */
     public const ADMIN = 'admin';
-    public const MASSEUR = 'masseur';
-    public const MASSEUSE = 'masseuse';
+    public const THERAPIST = 'therapist';
     public const CLIENT = 'client';
 
     /**

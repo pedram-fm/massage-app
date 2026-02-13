@@ -16,8 +16,7 @@ class TestUsersSeeder extends Seeder
     {
         $roles = [
             'admin' => Role::where('name', Role::ADMIN)->first(),
-            'masseur' => Role::where('name', Role::MASSEUR)->first(),
-            'masseuse' => Role::where('name', Role::MASSEUSE)->first(),
+            'therapist' => Role::where('name', Role::THERAPIST)->first(),
             'client' => Role::where('name', Role::CLIENT)->first(),
         ];
 
@@ -36,11 +35,12 @@ class TestUsersSeeder extends Seeder
             ]
         );
 
-        // Create Masseur (Male Therapist)
+        // Create Male Therapist
         User::firstOrCreate(
-            ['email' => 'masseur@massage-app.test'],
+            ['email' => 'therapist.male@massage-app.test'],
             [
-                'role_id' => $roles['masseur']->id,
+                'role_id' => $roles['therapist']->id,
+                'gender' => 'male',
                 'f_name' => 'محمد',
                 'l_name' => 'احمدی',
                 'username' => 'mohammad_therapist',
@@ -52,11 +52,12 @@ class TestUsersSeeder extends Seeder
             ]
         );
 
-        // Create Masseuse (Female Therapist)
+        // Create Female Therapist
         User::firstOrCreate(
-            ['email' => 'masseuse@massage-app.test'],
+            ['email' => 'therapist.female@massage-app.test'],
             [
-                'role_id' => $roles['masseuse']->id,
+                'role_id' => $roles['therapist']->id,
+                'gender' => 'female',
                 'f_name' => 'فاطمه',
                 'l_name' => 'حسینی',
                 'username' => 'fatemeh_therapist',
@@ -91,8 +92,8 @@ class TestUsersSeeder extends Seeder
             ['Role', 'Email', 'Password'],
             [
                 ['Admin', 'admin@massage-app.test', 'password'],
-                ['Masseur (Male)', 'masseur@massage-app.test', 'password'],
-                ['Masseuse (Female)', 'masseuse@massage-app.test', 'password'],
+                ['Therapist (Male)', 'therapist.male@massage-app.test', 'password'],
+                ['Therapist (Female)', 'therapist.female@massage-app.test', 'password'],
                 ['Client', 'client@massage-app.test', 'password'],
             ]
         );

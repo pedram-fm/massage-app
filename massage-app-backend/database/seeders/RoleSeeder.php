@@ -19,14 +19,9 @@ class RoleSeeder extends Seeder
                 'description' => 'Administrator with full system access',
             ],
             [
-                'name' => Role::MASSEUR,
-                'display_name' => 'Masseur',
-                'description' => 'Male massage therapist',
-            ],
-            [
-                'name' => Role::MASSEUSE,
-                'display_name' => 'Masseuse',
-                'description' => 'Female massage therapist',
+                'name' => Role::THERAPIST,
+                'display_name' => 'Massage Therapist',
+                'description' => 'Massage therapist (masseur/masseuse)',
             ],
             [
                 'name' => Role::CLIENT,
