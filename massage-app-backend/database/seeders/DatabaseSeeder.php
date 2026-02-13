@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             PermissionSeeder::class,
             RolePermissionSeeder::class,
+            ServiceTypeSeeder::class,
         ]);
 
         // User::factory(10)->create();

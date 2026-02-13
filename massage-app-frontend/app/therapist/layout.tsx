@@ -28,9 +28,11 @@ export default function TherapistLayout({
 
   const navItems = [
     { href: "/therapist/dashboard", label: "داشبورد", icon: Home },
+    { href: "/therapist/profile", label: "پروفایل", icon: Settings },
     { href: "/therapist/appointments", label: "سانس‌ها", icon: Calendar },
     { href: "/therapist/clients", label: "مراجعین", icon: Users },
     { href: "/therapist/schedule", label: "برنامه کاری", icon: FileText },
+    { href: "/therapist/services", label: "خدمات", icon: ListTodo },
   ];
 
   return (

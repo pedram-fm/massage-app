@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/modules/auth/hooks/useAuth";
 import { TokenExpiryHandler } from "@/modules/auth/components/TokenExpiryHandler";
 import { Toaster } from "sonner";
+import { ReactQueryProvider } from "@/lib/query-client";
 
 export const metadata: Metadata = {
   title: "سرنیتی اسپا | ماساژ و تندرستی",
@@ -17,11 +18,13 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <body className="antialiased">
-        <AuthProvider>
-          <TokenExpiryHandler />
-          {children}
-          <Toaster position="top-center" richColors />
-        </AuthProvider>
+        <ReactQueryProvider>
+          <AuthProvider>
+            <TokenExpiryHandler />
+            {children}
+            <Toaster position="top-center" richColors />
+          </AuthProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );

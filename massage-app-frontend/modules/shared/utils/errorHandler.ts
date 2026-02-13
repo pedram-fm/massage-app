@@ -5,7 +5,7 @@
 
 import { ROUTES } from '@/modules/shared/navigation/routes';
 
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 export enum ErrorCode {
   // Authentication errors

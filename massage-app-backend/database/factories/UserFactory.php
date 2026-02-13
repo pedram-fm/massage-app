@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Modules\Users\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -11,6 +12,13 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
+    /**
+     * The name of the factory's corresponding model.
+     *
+     * @var string
+     */
+    protected $model = User::class;
+
     /**
      * The current password being used by the factory.
      */
@@ -24,6 +32,7 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            'role_id' => 1, // Default role
             'f_name' => fake()->firstName(),
             'l_name' => fake()->lastName(),
             'username' => fake()->unique()->userName(),
