@@ -4,13 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
-import { userManagementService, type UpdateUserDto } from "@/modules/admin/services/userManagementService";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { httpClient } from "@/modules/shared/api/httpClient";
 
 interface ProfileSettingsModalProps {
   isOpen: boolean;
@@ -48,7 +42,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
 
     setIsSubmitting(true);
     try {
-      const updateData: UpdateUserDto = {
+      const updateData = {
         f_name: formData.f_name,
         l_name: formData.l_name,
         email: formData.email,
@@ -57,7 +51,8 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
         bio: formData.bio,
       };
 
-      await userManagementService.updateUser(user.id, updateData);
+      // Use auth profile endpoint instead of admin endpoint
+      await httpClient.put('/v1/auth/profile', updateData);
       
       // Update user in context and localStorage
       updateUser({
@@ -78,95 +73,120 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] " dir="rtl">
-        <DialogHeader>
-          <DialogTitle className="text-right">ویرایش پروفایل</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-200"
+      onClick={onClose}
+      style={{ animation: 'fadeIn 0.2s ease-out' }}
+    >
+      <div
+        className="w-full max-w-2xl rounded-2xl bg-[color:var(--card)] shadow-2xl max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+        style={{ animation: 'scaleIn 0.3s ease-out' }}
+      >
+        {/* Header */}
+        <div className="relative flex items-center justify-between border-b border-[color:var(--surface-muted)] p-6">
+          <h2 className="text-xl font-bold">ویرایش پروفایل</h2>
+          <button
+            onClick={onClose}
+            className="rounded-full p-2 text-[color:var(--muted-text)] transition-all hover:bg-[color:var(--surface-muted)] hover:text-[color:var(--foreground)] hover:rotate-90"
+            title="بستن"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="overflow-y-auto flex-1 p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[color:var(--muted-text)]">نام *</label>
+                <input
+                  required
+                  value={formData.f_name}
+                  onChange={(e) => setFormData({ ...formData, f_name: e.target.value })}
+                  className="w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm outline-none transition-all focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[color:var(--muted-text)]">نام خانوادگی *</label>
+                <input
+                  required
+                  value={formData.l_name}
+                  onChange={(e) => setFormData({ ...formData, l_name: e.target.value })}
+                  className="w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm outline-none transition-all focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <label className="text-sm font-medium">نام</label>
+              <label className="text-sm font-medium text-[color:var(--muted-text)]">نام کاربری</label>
               <input
-                required
-                value={formData.f_name}
-                onChange={(e) => setFormData({ ...formData, f_name: e.target.value })}
-                className="w-full rounded-md border p-2 text-sm outline-none focus:border-[color:var(--brand)]"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                className="w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm outline-none transition-all focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                dir="ltr"
               />
             </div>
+
             <div className="space-y-2">
-              <label className="text-sm font-medium">نام خانوادگی</label>
+              <label className="text-sm font-medium text-[color:var(--muted-text)]">ایمیل *</label>
               <input
+                type="email"
                 required
-                value={formData.l_name}
-                onChange={(e) => setFormData({ ...formData, l_name: e.target.value })}
-                className="w-full rounded-md border p-2 text-sm outline-none focus:border-[color:var(--brand)]"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm outline-none transition-all focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                dir="ltr"
               />
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">نام کاربری</label>
-            <input
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              className="w-full rounded-md border p-2 text-sm outline-none focus:border-[color:var(--brand)]"
-              dir="ltr"
-            />
-          </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-[color:var(--muted-text)]">شماره تماس *</label>
+              <input
+                required
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm outline-none transition-all focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                dir="ltr"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">ایمیل</label>
-            <input
-              type="email"
-              required
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full rounded-md border p-2 text-sm outline-none focus:border-[color:var(--brand)]"
-              dir="ltr"
-            />
-          </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-[color:var(--muted-text)]">درباره من</label>
+              <textarea
+                value={formData.bio}
+                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                className="w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm outline-none transition-all focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]/20 min-h-[100px] resize-none"
+                rows={4}
+              />
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">شماره تماس</label>
-            <input
-              required
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full rounded-md border p-2 text-sm outline-none focus:border-[color:var(--brand)]"
-              dir="ltr"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">درباره من</label>
-            <textarea
-              value={formData.bio}
-              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-              className="w-full rounded-md border p-2 text-sm outline-none focus:border-[color:var(--brand)] min-h-[80px]"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
-            >
-              انصراف
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex items-center gap-2 rounded-lg bg-[color:var(--brand)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-            >
-              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              ثبت تغییرات
-            </button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+            {/* Actions */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-[color:var(--surface-muted)]">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="rounded-lg border border-[color:var(--surface-muted)] px-6 py-2.5 text-sm font-medium transition-all hover:bg-[color:var(--surface-muted)] hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                انصراف
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[color:var(--brand)] to-[color:var(--accent)] px-6 py-2.5 text-sm font-medium text-white transition-all hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isSubmitting ? 'در حال ذخیره...' : 'ثبت تغییرات'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 }

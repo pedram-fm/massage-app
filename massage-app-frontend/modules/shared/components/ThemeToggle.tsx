@@ -21,18 +21,28 @@ export function ThemeToggle({
   onChange?: (isDark: boolean) => void;
   className?: string;
 }) {
-  const [isDark, setIsDark] = useState(() => getPreferredTheme() === "dark");
+  const [isDark, setIsDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Hydration fix: only read from localStorage after mounting
+  useEffect(() => {
+    setMounted(true);
+    setIsDark(getPreferredTheme() === "dark");
+  }, []);
 
   useEffect(() => {
+    if (!mounted) return;
     document.documentElement.classList.toggle("dark", isDark);
     onChange?.(isDark);
-  }, [isDark, onChange]);
+  }, [isDark, onChange, mounted]);
 
   useEffect(() => {
+    if (!mounted) return;
     window.localStorage.setItem(THEME_KEY, isDark ? "dark" : "light");
-  }, [isDark]);
+  }, [isDark, mounted]);
 
   useEffect(() => {
+    if (!mounted) return;
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const handleMediaChange = (event: MediaQueryListEvent) => {
       const saved = window.localStorage.getItem(THEME_KEY);
@@ -42,12 +52,30 @@ export function ThemeToggle({
 
     media.addEventListener("change", handleMediaChange);
     return () => media.removeEventListener("change", handleMediaChange);
-  }, []);
+  }, [mounted]);
 
   const toggleTheme = () => {
     const nextIsDark = !isDark;
     setIsDark(nextIsDark);
   };
+
+  // Prevent hydration mismatch by showing placeholder until mounted
+  if (!mounted) {
+    return (
+      <button
+        type="button"
+        disabled
+        className={
+          className ??
+          "inline-flex items-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--card)] px-4 py-2 text-xs font-medium transition hover:-translate-y-0.5 opacity-50"
+        }
+        aria-label="Loading theme"
+      >
+        <div className="h-4 w-4" />
+        <span>...</span>
+      </button>
+    );
+  }
 
   return (
     <button

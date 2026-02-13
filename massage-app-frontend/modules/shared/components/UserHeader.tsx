@@ -4,6 +4,7 @@ import { useAuth } from "@/modules/auth/hooks/useAuth";
 import { LogOut, User, ChevronDown, Settings } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function UserHeader() {
   const { user, logout } = useAuth();
@@ -97,6 +98,10 @@ export function UserHeader() {
               <Settings className="h-4 w-4" />
               تنظیمات حساب
             </Link>
+
+            <div className="px-2 py-2">
+              <ThemeToggle className="w-full justify-start gap-2 rounded-lg border-0 bg-transparent px-2 py-1.5 text-sm hover:bg-[color:var(--surface-muted)] hover:translate-y-0" />
+            </div>
 
             <button
               onClick={() => {

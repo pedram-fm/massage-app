@@ -43,27 +43,36 @@ export function NewReservationModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-3xl rounded-[28px] border border-[color:var(--surface-muted)] bg-[color:var(--card)]/95 p-4 shadow-2xl sm:p-6">
-        <button
-          onClick={onClose}
-          className="absolute left-4 top-4 rounded-full p-2 text-[color:var(--muted-text)] transition hover:text-[color:var(--brand)]"
-        >
-          <X className="h-5 w-5" />
-        </button>
-
-        <div className="max-h-[85vh] overflow-y-auto pr-2">
-          <div className="mb-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted-text)]">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-200"
+      onClick={onClose}
+      style={{ animation: 'fadeIn 0.2s ease-out' }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-3xl rounded-2xl bg-[color:var(--card)] shadow-2xl max-h-[85vh] overflow-hidden flex flex-col"
+        style={{ animation: 'scaleIn 0.3s ease-out' }}
+      >
+        {/* Header */}
+        <div className="relative flex items-center justify-between border-b border-[color:var(--surface-muted)] p-6">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-[color:var(--muted-text)]">
               رزرو جدید
             </p>
-            <h2 className="mt-2 text-2xl" style={{ fontFamily: "var(--font-display)" }}>
-              فرم پذیرش قبل از ماساژ
-            </h2>
+            <h2 className="mt-1 text-xl font-bold">فرم پذیرش قبل از ماساژ</h2>
           </div>
+          <button
+            onClick={onClose}
+            className="rounded-full p-2 text-[color:var(--muted-text)] transition-all hover:bg-[color:var(--surface-muted)] hover:text-[color:var(--foreground)] hover:rotate-90"
+            title="بستن"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-          <form className="grid gap-5">
+        {/* Content */}
+        <div className="overflow-y-auto flex-1 p-6">
+          <form id="reservation-form" className="grid gap-5">
             <section className="grid gap-4 rounded-2xl border border-[color:var(--surface-muted)] bg-[color:var(--surface)] p-4">
               <h3 className="text-sm font-semibold">اطلاعات پایه</h3>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -209,27 +218,30 @@ export function NewReservationModal({
 
             <section className="grid gap-4 rounded-2xl border border-[color:var(--surface-muted)] bg-[color:var(--surface)] p-4">
               <h3 className="text-sm font-semibold">تایید نهایی</h3>
-              <label className="flex items-center gap-2 text-xs text-[color:var(--muted-text)]">
-                <input type="checkbox" required />
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" required className="w-4 h-4 rounded" />
                 اطلاعات بالا را صحیح و کامل تایید می کنم.
               </label>
-              <div className="flex flex-wrap items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="rounded-full border border-[color:var(--surface-muted)] px-4 py-2 text-xs font-semibold text-[color:var(--muted-text)]"
-                >
-                  بعدا
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-full bg-[color:var(--brand)] px-5 py-2 text-xs font-semibold text-[color:var(--brand-foreground)]"
-                >
-                  ثبت فرم
-                </button>
-              </div>
             </section>
           </form>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="flex justify-end gap-3 border-t border-[color:var(--surface-muted)] p-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-[color:var(--surface-muted)] px-6 py-2.5 text-sm font-medium transition-all hover:bg-[color:var(--surface-muted)] hover:scale-105"
+          >
+            بعدا
+          </button>
+          <button
+            type="submit"
+            form="reservation-form"
+            className="rounded-lg bg-gradient-to-r from-[color:var(--brand)] to-[color:var(--accent)] px-6 py-2.5 text-sm font-medium text-white transition-all hover:shadow-lg hover:scale-105"
+          >
+            ثبت فرم
+          </button>
         </div>
       </div>
     </div>

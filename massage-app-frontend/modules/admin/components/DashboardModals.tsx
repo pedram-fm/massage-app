@@ -163,208 +163,231 @@ export function DashboardModals({
   return (
     <>
       {openProfile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-200"
+          onClick={onCloseProfile}
+          style={{ animation: 'fadeIn 0.2s ease-out' }}
+        >
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={onCloseProfile}
-          />
-          <div className="relative w-full max-w-lg rounded-[28px] border border-[color:var(--surface-muted)] bg-[color:var(--card)]/95 p-6 shadow-2xl">
-            <button
-              onClick={onCloseProfile}
-              className="absolute left-4 top-4 rounded-full p-2 text-[color:var(--muted-text)] transition hover:text-[color:var(--brand)]"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <div className="mb-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted-text)]">
-                پروفایل
-              </p>
-              <h3 className="mt-2 text-2xl" style={{ fontFamily: "var(--font-display)" }}>
-                ویرایش اطلاعات کاربری
-              </h3>
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-2xl rounded-2xl bg-[color:var(--card)] shadow-2xl max-h-[90vh] overflow-hidden flex flex-col"
+            style={{ animation: 'scaleIn 0.3s ease-out' }}
+          >
+            {/* Header */}
+            <div className="relative flex items-center justify-between border-b border-[color:var(--surface-muted)] p-6">
+              <h2 className="text-xl font-bold">ویرایش پروفایل</h2>
+              <button
+                onClick={onCloseProfile}
+                className="rounded-full p-2 text-[color:var(--muted-text)] transition-all hover:bg-[color:var(--surface-muted)] hover:text-[color:var(--foreground)] hover:rotate-90"
+                title="بستن"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
-            <div className="grid gap-5">
-              <div className="grid gap-3">
-                <label className="text-xs text-[color:var(--muted-text)]">تصویر پروفایل</label>
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl border border-[color:var(--surface-muted)] bg-[color:var(--surface-muted)] text-sm font-semibold text-[color:var(--muted-text)]">
-                    {profile.avatar_url ? (
-                      <Image
-                        src={profile.avatar_url}
-                        alt="Profile photo"
-                        loader={({ src }) => src}
-                        unoptimized
-                        width={80}
-                        height={80}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      initials
-                    )}
+            {/* Content */}
+            <div className="overflow-y-auto flex-1 p-6">
+              <div className="grid gap-5">
+                {/* Avatar Section */}
+                <div className="grid gap-3">
+                  <label className="text-sm font-medium text-[color:var(--muted-text)]">تصویر پروفایل</label>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border-2 border-[color:var(--surface-muted)] bg-[color:var(--surface-muted)] text-sm font-semibold text-[color:var(--muted-text)]">
+                      {profile.avatar_url ? (
+                        <Image
+                          src={profile.avatar_url}
+                          alt="Profile photo"
+                          loader={({ src }) => src}
+                          unoptimized
+                          width={80}
+                          height={80}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        initials
+                      )}
+                    </div>
+                    <div className="grid gap-1">
+                      <p className="text-sm font-medium">
+                        {profile.f_name} {profile.l_name}
+                      </p>
+                      <p className="text-xs text-[color:var(--muted-text)]">@{profile.username}</p>
+                    </div>
                   </div>
-                  <div className="grid gap-1">
-                    <p className="text-sm font-medium">
-                      {profile.f_name} {profile.l_name}
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--muted-text)]">نام</label>
+                    <input
+                      className="w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm outline-none transition-all focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                      value={profile.f_name}
+                      onChange={(e) => handleProfileChange("f_name", e.target.value)}
+                      placeholder="نام"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--muted-text)]">
+                      نام خانوادگی
+                    </label>
+                    <input
+                      className="w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm outline-none transition-all focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                      value={profile.l_name}
+                      onChange={(e) => handleProfileChange("l_name", e.target.value)}
+                      placeholder="نام خانوادگی"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--muted-text)]">
+                      نام کاربری
+                    </label>
+                    <input
+                      className="w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm outline-none transition-all focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                      value={profile.username}
+                      onChange={(e) => handleProfileChange("username", e.target.value)}
+                      placeholder="نام کاربری"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[color:var(--muted-text)]">ایمیل</label>
+                    <input 
+                      className="w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--surface)]/50 px-3 py-2 text-sm outline-none cursor-not-allowed opacity-70" 
+                      value={profile.email} 
+                      disabled 
+                    />
+                    <p className="mt-1 text-xs text-[color:var(--muted-text)]">
+                      {emailVerifiedAt ? "✓ ایمیل تایید شده" : "⚠ ایمیل تایید نشده"}
                     </p>
-                    <p className="text-xs text-[color:var(--muted-text)]">@{profile.username}</p>
                   </div>
                 </div>
-              </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-xs text-[color:var(--muted-text)]">نام</label>
-                  <input
-                    className={inputBase}
-                    value={profile.f_name}
-                    onChange={(e) => handleProfileChange("f_name", e.target.value)}
-                    placeholder="نام"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-xs text-[color:var(--muted-text)]">
-                    نام خانوادگی
+                  <label className="mb-2 block text-sm font-medium text-[color:var(--muted-text)]">
+                    شماره تماس
                   </label>
-                  <input
-                    className={inputBase}
-                    value={profile.l_name}
-                    onChange={(e) => handleProfileChange("l_name", e.target.value)}
-                    placeholder="نام خانوادگی"
+                  <input 
+                    className="w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--surface)]/50 px-3 py-2 text-sm outline-none cursor-not-allowed opacity-70" 
+                    value={profile.phone} 
+                    disabled 
                   />
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-xs text-[color:var(--muted-text)]">
-                    نام کاربری
-                  </label>
-                  <input
-                    className={inputBase}
-                    value={profile.username}
-                    onChange={(e) => handleProfileChange("username", e.target.value)}
-                    placeholder="نام کاربری"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-xs text-[color:var(--muted-text)]">ایمیل</label>
-                  <input className={inputBase} value={profile.email} disabled />
-                  <p className="mt-1 text-[11px] text-[color:var(--muted-text)]">
-                    {emailVerifiedAt ? "ایمیل تایید شده است" : "ایمیل تایید نشده است"}
+                  <p className="mt-1 text-xs text-[color:var(--muted-text)]">
+                    {phoneVerifiedAt ? "✓ شماره تلفن تایید شده" : "⚠ شماره تلفن تایید نشده"}
                   </p>
                 </div>
-              </div>
 
-              <div>
-                <label className="mb-2 block text-xs text-[color:var(--muted-text)]">
-                  شماره تماس
-                </label>
-                <input className={inputBase} value={profile.phone} disabled />
-                <p className="mt-1 text-[11px] text-[color:var(--muted-text)]">
-                  {phoneVerifiedAt ? "شماره تلفن تایید شده است" : "شماره تلفن تایید نشده است"}
-                </p>
-              </div>
-              <div>
-                <label className="mb-2 block text-xs text-[color:var(--muted-text)]">
-                  Profile photo URL
-                </label>
-                <input
-                  className={inputBase}
-                  value={profile.avatar_url}
-                  onChange={(e) => handleProfileChange("avatar_url", e.target.value)}
-                  placeholder="https://..."
-                />
-              </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-[color:var(--muted-text)]">
+                    آدرس تصویر پروفایل
+                  </label>
+                  <input
+                    className="w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm outline-none transition-all focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                    value={profile.avatar_url}
+                    onChange={(e) => handleProfileChange("avatar_url", e.target.value)}
+                    placeholder="https://..."
+                    dir="ltr"
+                  />
+                </div>
 
-              <div>
-                <label className="mb-2 block text-xs text-[color:var(--muted-text)]">Bio</label>
-                <textarea
-                  className={`${inputBase} min-h-[110px] resize-none`}
-                  value={profile.bio}
-                  onChange={(e) => handleProfileChange("bio", e.target.value)}
-                  placeholder="A short bio about you..."
-                />
-              </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-[color:var(--muted-text)]">درباره من</label>
+                  <textarea
+                    className="w-full rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--card)] px-3 py-2 text-sm outline-none transition-all focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]/20 min-h-[100px] resize-none"
+                    value={profile.bio}
+                    onChange={(e) => handleProfileChange("bio", e.target.value)}
+                    placeholder="توضیحی کوتاه در مورد خودتان..."
+                    rows={4}
+                  />
+                </div>
 
-              {isLoading && (
-                <p className="text-xs text-[color:var(--muted-text)]">Loading profile...</p>
-              )}
-              {statusMessage && (
-                <p className="text-xs text-[color:var(--accent-strong)]">{statusMessage}</p>
-              )}
-              {errorMessage && <p className="text-xs text-red-500">{errorMessage}</p>}
-
-              <div className="flex flex-wrap items-center justify-end gap-3">
-                <button
-                  onClick={onCloseProfile}
-                  className="rounded-full border border-[color:var(--surface-muted)] px-4 py-2 text-xs font-medium text-[color:var(--muted-text)]"
-                >
-                  انصراف
-                </button>
-                <button
-                  onClick={handleSaveProfile}
-                  disabled={isSaving}
-                  className="rounded-full bg-[color:var(--brand)] px-5 py-2 text-xs font-semibold text-[color:var(--brand-foreground)] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSaving ? "در حال ذخیره..." : "ذخیره تغییرات"}
-                </button>
+                {isLoading && (
+                  <p className="text-xs text-[color:var(--muted-text)]">در حال بارگذاری...</p>
+                )}
+                {statusMessage && (
+                  <p className="text-sm text-green-600 dark:text-green-400">{statusMessage}</p>
+                )}
+                {errorMessage && <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>}
               </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="flex justify-end gap-3 border-t border-[color:var(--surface-muted)] p-6">
+              <button
+                onClick={onCloseProfile}
+                disabled={isSaving}
+                className="rounded-lg border border-[color:var(--surface-muted)] px-6 py-2.5 text-sm font-medium transition-all hover:bg-[color:var(--surface-muted)] hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                انصراف
+              </button>
+              <button
+                onClick={handleSaveProfile}
+                disabled={isSaving}
+                className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[color:var(--brand)] to-[color:var(--accent)] px-6 py-2.5 text-sm font-medium text-white transition-all hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSaving ? "در حال ذخیره..." : "ذخیره تغییرات"}
+              </button>
             </div>
           </div>
         </div>
       )}
 
       {openSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-200"
+          onClick={onCloseSettings}
+          style={{ animation: 'fadeIn 0.2s ease-out' }}
+        >
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={onCloseSettings}
-          />
-          <div className="relative w-full max-w-md rounded-[28px] border border-[color:var(--surface-muted)] bg-[color:var(--card)]/95 p-6 shadow-2xl">
-            <button
-              onClick={onCloseSettings}
-              className="absolute left-4 top-4 rounded-full p-2 text-[color:var(--muted-text)] transition hover:text-[color:var(--brand)]"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <div className="mb-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted-text)]">
-                تنظیمات
-              </p>
-              <h3 className="mt-2 text-2xl" style={{ fontFamily: "var(--font-display)" }}>
-                تنظیمات پنل
-              </h3>
-            </div>
-
-            <div className="grid gap-4 text-sm">
-              {[
-                "فعال سازی اعلان پیامک برای نوبت‌ها",
-                "نمایش تقویم هفته به هفته",
-                "ثبت خودکار گزارش بعد از جلسه",
-              ].map((item) => (
-                <label
-                  key={item}
-                  className="flex items-center justify-between rounded-2xl border border-[color:var(--surface-muted)] bg-[color:var(--surface)] px-4 py-3"
-                >
-                  <span className="text-[color:var(--muted-text)]">{item}</span>
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-[color:var(--surface-muted)] text-[color:var(--accent)] focus:ring-[color:var(--accent)]"
-                    defaultChecked
-                  />
-                </label>
-              ))}
-            </div>
-
-            <div className="mt-6 flex items-center justify-end gap-3">
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md rounded-2xl bg-[color:var(--card)] shadow-2xl"
+            style={{ animation: 'scaleIn 0.3s ease-out' }}
+          >
+            {/* Header */}
+            <div className="relative flex items-center justify-between border-b border-[color:var(--surface-muted)] p-6">
+              <h2 className="text-xl font-bold">تنظیمات</h2>
               <button
                 onClick={onCloseSettings}
-                className="rounded-full border border-[color:var(--surface-muted)] px-4 py-2 text-xs font-medium text-[color:var(--muted-text)]"
+                className="rounded-full p-2 text-[color:var(--muted-text)] transition-all hover:bg-[color:var(--surface-muted)] hover:text-[color:var(--foreground)] hover:rotate-90"
+                title="بستن"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="grid gap-4 text-sm">
+                {[
+                  "فعال سازی اعلان پیامک برای نوبت‌ها",
+                  "نمایش تقویم هفته به هفته",
+                  "ثبت خودکار گزارش بعد از جلسه",
+                ].map((item) => (
+                  <label
+                    key={item}
+                    className="flex items-center justify-between rounded-xl border border-[color:var(--surface-muted)] bg-[color:var(--surface)] px-4 py-3 cursor-pointer hover:bg-[color:var(--surface-muted)] transition-colors"
+                  >
+                    <span className="text-[color:var(--foreground)]">{item}</span>
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-[color:var(--surface-muted)] text-[color:var(--accent)] focus:ring-[color:var(--accent)]"
+                      defaultChecked
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="flex justify-end gap-3 border-t border-[color:var(--surface-muted)] p-6">
+              <button
+                onClick={onCloseSettings}
+                className="rounded-lg border border-[color:var(--surface-muted)] px-6 py-2.5 text-sm font-medium transition-all hover:bg-[color:var(--surface-muted)] hover:scale-105"
               >
                 بستن
               </button>
-              <button className="rounded-full bg-[color:var(--brand)] px-5 py-2 text-xs font-semibold text-[color:var(--brand-foreground)]">
+              <button className="rounded-lg bg-gradient-to-r from-[color:var(--brand)] to-[color:var(--accent)] px-6 py-2.5 text-sm font-medium text-white transition-all hover:shadow-lg hover:scale-105">
                 ذخیره
               </button>
             </div>

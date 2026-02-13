@@ -9,7 +9,9 @@ import {
   Menu, 
   LogOut, 
   User, 
-  HelpCircle
+  HelpCircle,
+  Moon,
+  Sun
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -23,6 +25,7 @@ import {
   DropdownMenuShortcut
 } from "@/components/ui/dropdown-menu";
 import { ProfileSettingsModal } from "./ProfileSettingsModal";
+import { ThemeToggle } from "@/modules/shared/components/ThemeToggle";
 
 type AdminHeaderProps = {
   onMenuClick?: () => void;
@@ -116,6 +119,11 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
+                  <DropdownMenuItem className="cursor-pointer" asChild>
+                    <div className="w-full">
+                      <ThemeToggle className="w-full justify-start gap-2 rounded-lg border-0 bg-transparent px-2 py-1.5 text-sm hover:bg-[color:var(--surface-muted)] hover:translate-y-0" />
+                    </div>
+                  </DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer">
                     <HelpCircle className="ml-2 h-4 w-4" />
                     <span>راهنما و پشتیبانی</span>

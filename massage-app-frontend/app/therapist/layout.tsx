@@ -9,6 +9,7 @@ import * as tokenManager from "@/modules/auth/utils/tokenManager";
 import { ROUTES } from "@/modules/shared/navigation/routes";
 import { useState, useEffect } from "react";
 import { RoleGuard } from "@/modules/auth/components/RoleGuard";
+import { RoleName } from "@/modules/auth/types/auth";
 
 export default function TherapistLayout({
   children,
@@ -33,7 +34,7 @@ export default function TherapistLayout({
   ];
 
   return (
-    <RoleGuard allowedRoles={['therapist']}>
+    <RoleGuard allowedRoles={[RoleName.THERAPIST]}>
       <div className="flex min-h-screen bg-[color:var(--surface)] overflow-x-hidden" dir="rtl">
         {/* Mobile Sidebar Overlay */}
         {isSidebarOpen && (
