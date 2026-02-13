@@ -70,8 +70,7 @@ export default function UsersManagementPage() {
     switch (roleName) {
       case "admin":
         return "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800";
-      case "masseur":
-      case "masseuse":
+      case "therapist":
         return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800";
       case "client":
         return "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800";
@@ -367,7 +366,7 @@ export default function UsersManagementPage() {
                         <div className="mt-1">
                           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                             user.role?.name === 'admin' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' :
-                            user.role?.name === 'masseur' || user.role?.name === 'masseuse' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                            user.role?.name === 'therapist' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
                             'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
                           }`}>
                             {user.role?.display_name}

@@ -41,8 +41,7 @@ export function getDashboardRoute(roleName?: string): string {
   switch (roleName) {
     case RoleName.ADMIN:
       return ROUTES.ADMIN_USERS;
-    case RoleName.MASSEUR:
-    case RoleName.MASSEUSE:
+    case RoleName.THERAPIST:
       return ROUTES.THERAPIST_DASHBOARD;
     default:
       return ROUTES.DASHBOARD;

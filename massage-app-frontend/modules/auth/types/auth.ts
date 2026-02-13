@@ -3,8 +3,7 @@
  */
 export enum RoleName {
   ADMIN = 'admin',
-  MASSEUR = 'masseur',
-  MASSEUSE = 'masseuse',
+  THERAPIST = 'therapist',
   CLIENT = 'client',
 }
 

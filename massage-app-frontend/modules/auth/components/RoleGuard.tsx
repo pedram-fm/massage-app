@@ -69,10 +69,10 @@ export function AdminOnly({ children }: { children: React.ReactNode }) {
 
 /**
  * TherapistOnly component
- * Shorthand for therapist-only routes (masseur or masseuse)
+ * Shorthand for therapist-only routes
  */
 export function TherapistOnly({ children }: { children: React.ReactNode }) {
-  return <RoleGuard allowedRoles={[RoleName.MASSEUR, RoleName.MASSEUSE]}>{children}</RoleGuard>;
+  return <RoleGuard allowedRoles={[RoleName.THERAPIST]}>{children}</RoleGuard>;
 }
 
 /**

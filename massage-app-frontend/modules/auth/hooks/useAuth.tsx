@@ -43,7 +43,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         // Verify token against API
         try {
-          const res = await fetch(`${API_CONFIG.BASE_URL}/api/auth/me`, {
+          const res = await fetch(`${API_CONFIG.BASE_URL}/v1/auth/me`, {
             headers: {
               Authorization: tokenManager.getAuthHeader()!,
               Accept: "application/json",
@@ -93,7 +93,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const isAdmin = (): boolean => hasRole(RoleName.ADMIN);
-  const isMassageTherapist = (): boolean => hasRole([RoleName.MASSEUR, RoleName.MASSEUSE]);
+  const isMassageTherapist = (): boolean => hasRole(RoleName.THERAPIST);
   const isClient = (): boolean => hasRole(RoleName.CLIENT);
 
   // ── login ──
