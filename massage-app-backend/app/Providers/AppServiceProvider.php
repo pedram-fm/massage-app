@@ -2,18 +2,6 @@
 
 namespace App\Providers;
 
-use App\Contracts\OtpSender;
-use App\Contracts\EmailCodeSender;
-use App\Contracts\PasswordResetCodeSender;
-use App\Services\Auth\LogOtpSender;
-use App\Services\Auth\LogEmailCodeSender;
-use App\Services\Auth\SmtpEmailCodeSender;
-use App\Services\Auth\LogPasswordResetCodeSender;
-use App\Services\Auth\SmtpPasswordResetCodeSender;
-use App\Contracts\Repositories\UserRepositoryInterface;
-use App\Repositories\Eloquent\UserRepository;
-use App\Contracts\Services\OtpServiceInterface;
-use App\Services\Auth\OtpService;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\Operation;
@@ -29,29 +17,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(OtpSender::class, LogOtpSender::class);
-        $this->app->bind(EmailCodeSender::class, function () {
-            $mailer = config('mail.default', 'log');
-
-            if ($mailer === 'log' || $mailer === 'array') {
-                return new LogEmailCodeSender();
-            }
-
-            return new SmtpEmailCodeSender();
-        });
-
-        $this->app->bind(PasswordResetCodeSender::class, function () {
-            $mailer = config('mail.default', 'log');
-
-            if ($mailer === 'log' || $mailer === 'array') {
-                return new LogPasswordResetCodeSender();
-            }
-
-            return new SmtpPasswordResetCodeSender();
-        });
-
-        $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
-        $this->app->bind(OtpServiceInterface::class, OtpService::class);
+        // Module bindings are registered in ModuleServiceProvider
     }
 
     /**
@@ -59,26 +25,77 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configureScramble();
+    }
+
+    /**
+     * Configure Scramble API documentation — tags & security.
+     */
+    private function configureScramble(): void
+    {
+        /*
+        |----------------------------------------------------------------------
+        | Tag resolver — groups endpoints by module in the Swagger UI sidebar.
+        |----------------------------------------------------------------------
+        |
+        | Module mapping:
+        |  v1/auth/*          → "Auth · Public"  or  "Auth · Protected"
+        |  v1/admin/users/*   → "Admin · User Management"
+        |  v1/admin/roles     → "Admin · User Management"
+        |  v1/admin/dashboard → "Admin · Dashboard"
+        |  v1/therapist/*     → "Therapist"
+        |  v1/client/*        → "Client"
+        |  v1/logs/*          → "System · Logs"
+        |  fallback           → Controller class name
+        |
+        */
         Scramble::resolveTagsUsing(function (RouteInfo $routeInfo, Operation $operation): array {
             $uri = ltrim($routeInfo->route->uri(), '/');
 
-            if (Str::startsWith($uri, ['auth', 'api/auth'])) {
-                $middlewares = $routeInfo->route->middleware();
-                $isProtected = collect($middlewares)->contains(
+            // ── Auth module ──────────────────────────────────
+            if (Str::startsWith($uri, 'v1/auth')) {
+                $isProtected = collect($routeInfo->route->middleware())->contains(
                     fn (string $mw) => Str::startsWith($mw, 'auth:') || $mw === 'auth'
                 );
-
-                return [$isProtected ? 'Auth - Protected' : 'Auth - Public'];
+                return [$isProtected ? 'Auth · Protected' : 'Auth · Public'];
             }
 
-            $className = $routeInfo->className();
-            $defaultTag = $className
-                ? (string) Str::of(class_basename($className))->replace('Controller', '')
-                : 'General';
+            // ── Admin module ─────────────────────────────────
+            if (Str::startsWith($uri, 'v1/admin')) {
+                if (Str::contains($uri, ['/users', '/roles'])) {
+                    return ['Admin · User Management'];
+                }
+                return ['Admin · Dashboard'];
+            }
 
-            return [$defaultTag];
+            // ── Therapist placeholder ────────────────────────
+            if (Str::startsWith($uri, 'v1/therapist')) {
+                return ['Therapist'];
+            }
+
+            // ── Client placeholder ───────────────────────────
+            if (Str::startsWith($uri, 'v1/client')) {
+                return ['Client'];
+            }
+
+            // ── System / Shared ──────────────────────────────
+            if (Str::startsWith($uri, 'v1/logs')) {
+                return ['System · Logs'];
+            }
+
+            // ── Fallback: derive from controller name ────────
+            $className = $routeInfo->className();
+            return [$className
+                ? (string) Str::of(class_basename($className))->replace('Controller', '')
+                : 'General'
+            ];
         });
 
+        /*
+        |----------------------------------------------------------------------
+        | Security scheme — Bearer token used by Passport.
+        |----------------------------------------------------------------------
+        */
         Scramble::afterOpenApiGenerated(function (OpenApi $openApi) {
             $openApi->secure(
                 SecurityScheme::http('bearer', 'JWT')

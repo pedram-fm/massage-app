@@ -13,7 +13,7 @@ import {
   Star,
   Waves,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { ThemeToggle } from "@/modules/shared/components/ThemeToggle";
 
 const services = [
   {

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Home } from "lucide-react";
 import { TodoBoard } from "@/components/todos/TodoBoard";
-import { ROUTES } from "@/lib/navigation/routes";
+import { ROUTES } from "@/modules/shared/navigation/routes";
 
 export default function UserTodosPage() {
   return (

@@ -5,16 +5,16 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { ForgotPassword } from "@/components/auth/ForgotPassword";
-import { Register } from "@/components/auth/Register";
-import { FloatingElements } from "@/components/shared/FloatingElements";
-import { CloudCompanion } from "@/components/shared/CloudCompanion";
-import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { ForgotPassword } from "@/modules/auth/components/ForgotPassword";
+import { Register } from "@/modules/auth/components/Register";
+import { FloatingElements } from "@/modules/shared/components/FloatingElements";
+import { CloudCompanion } from "@/modules/shared/components/CloudCompanion";
+import { ThemeToggle } from "@/modules/shared/components/ThemeToggle";
 import { toast, Toaster } from "sonner";
-import { useAuth } from "@/hooks/auth/useAuth";
-import { validateEmail, validatePhone } from "@/lib/utils/validation";
-import { VALIDATION_RULES, API_CONFIG } from "@/lib/config/constants";
-import { ROUTES, getDashboardRoute } from "@/lib/navigation/routes";
+import { useAuth } from "@/modules/auth/hooks/useAuth";
+import { validateEmail, validatePhone } from "@/modules/shared/utils/validation";
+import { VALIDATION_RULES, API_CONFIG } from "@/modules/shared/config/constants";
+import { ROUTES, getDashboardRoute } from "@/modules/shared/navigation/routes";
 
 export default function LoginPage() {
   const router = useRouter();

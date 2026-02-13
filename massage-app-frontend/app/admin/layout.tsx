@@ -3,11 +3,11 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Home, ListTodo, FileText, Calendar, Settings, LogOut, Users, X, ChevronRight, ChevronLeft } from "lucide-react";
-import { AdminOnly } from "@/components/auth/RoleGuard";
-import { useAuth } from "@/hooks/auth/useAuth";
-import { AdminHeader } from "@/components/admin/AdminHeader";
-import * as tokenManager from "@/lib/auth/tokenManager";
-import { ROUTES } from "@/lib/navigation/routes";
+import { AdminOnly } from "@/modules/auth/components/RoleGuard";
+import { useAuth } from "@/modules/auth/hooks/useAuth";
+import { AdminHeader } from "@/modules/admin/components/AdminHeader";
+import * as tokenManager from "@/modules/auth/utils/tokenManager";
+import { ROUTES } from "@/modules/shared/navigation/routes";
 import { useState, useEffect } from "react";
 
 export default function AdminLayout({

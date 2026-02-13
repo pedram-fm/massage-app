@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AuthProvider } from "@/hooks/auth/useAuth";
-import { TokenExpiryHandler } from "@/components/auth/TokenExpiryHandler";
+import { AuthProvider } from "@/modules/auth/hooks/useAuth";
+import { TokenExpiryHandler } from "@/modules/auth/components/TokenExpiryHandler";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {

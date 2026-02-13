@@ -14,10 +14,10 @@ import {
   UserX,
   RefreshCw
 } from "lucide-react";
-import { useUserManagement } from "@/hooks/admin/useUserManagement";
-import { UserFormModal } from "@/components/admin/UserFormModal";
-import { DeleteConfirmModal } from "@/components/admin/DeleteConfirmModal";
-import type { User, CreateUserDto, UpdateUserDto } from "@/lib/services/userManagementService";
+import { useUserManagement } from "@/modules/admin/hooks/useUserManagement";
+import { UserFormModal } from "@/modules/admin/components/UserFormModal";
+import { DeleteConfirmModal } from "@/modules/admin/components/DeleteConfirmModal";
+import type { User, CreateUserDto, UpdateUserDto } from "@/modules/admin/services/userManagementService";
 
 export default function UsersManagementPage() {
   const {

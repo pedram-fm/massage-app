@@ -12,15 +12,15 @@ import {
   SlidersHorizontal,
   User,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/shared/ThemeToggle";
-import { DashboardModals } from "@/components/admin/DashboardModals";
-import { NewReservationModal } from "@/components/admin/NewReservationModal";
-import { CloudCompanion } from "@/components/shared/CloudCompanion";
-import { UserHeader } from "@/components/shared/UserHeader";
+import { ThemeToggle } from "@/modules/shared/components/ThemeToggle";
+import { DashboardModals } from "@/modules/admin/components/DashboardModals";
+import { NewReservationModal } from "@/modules/admin/components/NewReservationModal";
+import { CloudCompanion } from "@/modules/shared/components/CloudCompanion";
+import { UserHeader } from "@/modules/shared/components/UserHeader";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/auth/useAuth";
-import { ROUTES } from "@/lib/navigation/routes";
+import { useAuth } from "@/modules/auth/hooks/useAuth";
+import { ROUTES } from "@/modules/shared/navigation/routes";
 
 const menuItems = [
   { href: "/dashboard", label: "نمای کلی", icon: LayoutDashboard },
