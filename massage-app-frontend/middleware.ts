@@ -16,7 +16,9 @@ export function middleware(request: NextRequest) {
     p === '/' ? pathname === '/' : pathname.startsWith(p)
   );
 
-  const isProtected = pathname.startsWith('/admin') || pathname.startsWith('/dashboard');
+  const isProtected = pathname.startsWith('/admin') || 
+                       pathname.startsWith('/dashboard') || 
+                       pathname.startsWith('/therapist');
 
   // No token + protected route → login
   if (!token && isProtected) {

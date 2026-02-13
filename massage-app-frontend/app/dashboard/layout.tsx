@@ -17,10 +17,9 @@ import { DashboardModals } from "@/modules/admin/components/DashboardModals";
 import { NewReservationModal } from "@/modules/admin/components/NewReservationModal";
 import { CloudCompanion } from "@/modules/shared/components/CloudCompanion";
 import { UserHeader } from "@/modules/shared/components/UserHeader";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { ClientOnly } from "@/modules/auth/components/RoleGuard";
+import { useState } from "react";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
-import { ROUTES } from "@/modules/shared/navigation/routes";
 
 const menuItems = [
   { href: "/dashboard", label: "نمای کلی", icon: LayoutDashboard },
@@ -30,46 +29,17 @@ const menuItems = [
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const router = useRouter();
-  const { user: authUser, isLoading: authLoading, isAuthenticated, logout } = useAuth();
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const { logout } = useAuth();
   const [openProfile, setOpenProfile] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
   const [openReservation, setOpenReservation] = useState(false);
-
-  useEffect(() => {
-    if (authLoading) return;
-    
-    if (!isAuthenticated || !authUser) {
-      router.replace(ROUTES.LOGIN);
-      return;
-    }
-    
-    // Redirect admins to admin panel
-    if (authUser.role?.name === "admin") {
-      router.replace(ROUTES.ADMIN_USERS);
-      return;
-    }
-    
-    setIsCheckingAuth(false);
-  }, [authUser, authLoading, isAuthenticated, router]);
-
-  if (isCheckingAuth || authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[color:var(--surface)]">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[color:var(--brand)] border-r-transparent"></div>
-          <p className="mt-4 text-[color:var(--muted-text)]">در حال بارگذاری...</p>
-        </div>
-      </div>
-    );
-  }
 
   const handleLogout = () => {
     logout();
   };
 
   return (
+    <ClientOnly>
     <div className="min-h-screen bg-[color:var(--surface)] text-[color:var(--brand)]">
       <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-6 lg:flex-row-reverse lg:px-6 lg:py-8">
         <main className="flex-1 rounded-[32px] border border-[color:var(--surface-muted)] bg-[color:var(--card)]/90 p-5 shadow-sm lg:p-8">
@@ -171,5 +141,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <NewReservationModal open={openReservation} onClose={() => setOpenReservation(false)} />
       <CloudCompanion />
     </div>
+    </ClientOnly>
   );
 }
